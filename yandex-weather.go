@@ -55,7 +55,8 @@ var SELECTORS_NEXT_DAYS = map[string]string{
 }
 
 //-----------------------------------------------------------------------------
-func get_weather_raw(city string) *http.Response {
+// get weather html page as http.Response
+func get_weather_page(city string) *http.Response {
 	cookie, _ := cookiejar.New(nil)
 	client := &http.Client{
 		Jar: cookie,
@@ -85,6 +86,7 @@ func get_weather_raw(city string) *http.Response {
 }
 
 //-----------------------------------------------------------------------------
+// parse html via goquery, find DOM-nodes with weather forecast data
 func get_weather(http_response *http.Response) (map[string]string, []map[string]string) {
 	doc, err := goquery.NewDocumentFromResponse(http_response)
 	if err != nil {
@@ -114,7 +116,8 @@ func get_weather(http_response *http.Response) (map[string]string, []map[string]
 }
 
 //-----------------------------------------------------------------------------
-func main() {
+// get command line parameters
+func get_params() (string, bool, bool) {
 	get_json := false
 	no_color := false
 	flag.BoolVar(&get_json, "json", false, "get JSON")
@@ -127,17 +130,23 @@ func main() {
 	flag.Parse()
 
 	city := ""
-
 	if flag.NArg() >= 1 {
 		city = flag.Args()[0]
 	}
 
-	forecast_now, forecast_next := get_weather(get_weather_raw(city))
+	return city, get_json, no_color
+}
+
+//-----------------------------------------------------------------------------
+// render data as text or JSON
+func render(forecast_now map[string]string, forecast_next []map[string]string, city string, get_json, no_color bool) {
 	if _, ok := forecast_now["city"]; ok {
 		var json_data map[string]interface{}
 
-		var (cl_green, cl_blue, cl_yellow, cl_reset string)
-		if ! no_color {
+		var (
+			cl_green, cl_blue, cl_yellow, cl_reset string
+		)
+		if !no_color {
 			cl_green = ansi.ColorCode("green")
 			cl_blue = ansi.ColorCode("blue")
 			cl_yellow = ansi.ColorCode("yellow")
@@ -186,4 +195,11 @@ func main() {
 	} else {
 		fmt.Printf("City \"%s\" dont found\n", city)
 	}
+}
+
+//-----------------------------------------------------------------------------
+func main() {
+	city, get_json, no_color := get_params()
+	forecast_now, forecast_next := get_weather(get_weather_page(city))
+	render(forecast_now, forecast_next, city, get_json, no_color)
 }

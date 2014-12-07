@@ -32,11 +32,15 @@ import (
 )
 
 const (
-	BASE_URL      = "https://pogoda.yandex.ru/"
-	USER_AGENT    = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/600.1.25 (KHTML, like Gecko) Version/8.0 Safari/600.1.25"
+	// BASE_URL - yandex pogoda service url
+	BASE_URL = "https://pogoda.yandex.ru/"
+	// USER_AGENT - for http.request
+	USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/600.1.25 (KHTML, like Gecko) Version/8.0 Safari/600.1.25"
+	// FORECAST_DAYS - parse days in forecast
 	FORECAST_DAYS = 10
 )
 
+// SELECTORS - css selectors for forecast today
 var SELECTORS = map[string]string{
 	"city":       "h1.navigation-city__city",
 	"term_now":   "div.current-weather div.current-weather__thermometer_type_now",
@@ -47,6 +51,7 @@ var SELECTORS = map[string]string{
 	"pressure":   "div.current-weather div.current-weather__info-row:nth-child(4)",
 }
 
+// SELECTORS_NEXT_DAYS - css selectors for forecast next days
 var SELECTORS_NEXT_DAYS = map[string]string{
 	"date":       "div.tabs-panes span.forecast-brief__item-day",
 	"desc":       "div.tabs-panes div.forecast-brief__item-comment",

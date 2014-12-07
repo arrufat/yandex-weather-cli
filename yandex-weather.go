@@ -16,7 +16,7 @@ const (
 	FORECAST_DAYS = 10
 )
 
-var selectors = map[string]string{
+var SELECTORS = map[string]string{
 	"city":       "h1.navigation-city__city",
 	"term_now":   "div.current-weather div.current-weather__thermometer_type_now",
 	"term_night": "div.current-weather div.current-weather__thermometer_type_after",
@@ -26,7 +26,7 @@ var selectors = map[string]string{
 	"pressure":   "div.current-weather div.current-weather__info-row:nth-child(4)",
 }
 
-var selectors_next_days = map[string]string{
+var SELECTORS_NEXT_DAYS = map[string]string{
 	"date":       "div.tabs-panes span.forecast-brief__item-day",
 	"desc":       "div.tabs-panes div.forecast-brief__item-comment",
 	"term":       "div.tabs-panes div.forecast-brief__item-temp-day",
@@ -72,14 +72,14 @@ func get_weather(http_response *http.Response) (map[string]string, []map[string]
 
 	forecast_now := map[string]string{}
 
-	for name, selector := range selectors {
+	for name, selector := range SELECTORS {
 		doc.Find(selector).Each(func(i int, selection *goquery.Selection) {
 			forecast_now[name] = selection.Text()
 		})
 	}
 
 	forecast_next := make([]map[string]string, 0, FORECAST_DAYS)
-	for name, selector := range selectors_next_days {
+	for name, selector := range SELECTORS_NEXT_DAYS {
 		doc.Find(selector).Each(func(i int, selection *goquery.Selection) {
 			if len(forecast_next)-1 < i {
 				forecast_next = append(forecast_next, map[string]string{})

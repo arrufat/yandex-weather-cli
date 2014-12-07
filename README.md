@@ -8,6 +8,7 @@ Usage:
     cp $GOPATH/bin/yandex-weather-cli ~/bin/yandex-weather
 
     yandex-weather -help
+    yandex-weather -no-color
     yandex-weather
     yandex-weather kiev
     yandex-weather london

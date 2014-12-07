@@ -6,6 +6,7 @@ usage:
 	go build yandex-weather.go
 
 	./yandex-weather
+	./yandex-weather -no-color
 	./yandex-weather kiev
 	./yandex-weather kiev
 
@@ -27,6 +28,7 @@ import (
 	"os"
 
 	"github.com/PuerkitoBio/goquery"
+	"github.com/mgutz/ansi"
 )
 
 const (
@@ -114,7 +116,9 @@ func get_weather(http_response *http.Response) (map[string]string, []map[string]
 //-----------------------------------------------------------------------------
 func main() {
 	get_json := false
+	no_color := false
 	flag.BoolVar(&get_json, "json", false, "get JSON")
+	flag.BoolVar(&no_color, "no-color", false, "disable colored output")
 	flag.Usage = func() {
 		fmt.Printf("Usage: %s [options] [city]\noptions:\n", os.Args[0])
 		flag.PrintDefaults()
@@ -132,14 +136,26 @@ func main() {
 	if _, ok := forecast_now["city"]; ok {
 		var json_data map[string]interface{}
 
+		var (cl_green, cl_blue, cl_yellow, cl_reset string)
+		if ! no_color {
+			cl_green = ansi.ColorCode("green")
+			cl_blue = ansi.ColorCode("blue")
+			cl_yellow = ansi.ColorCode("yellow")
+			cl_reset = ansi.ColorCode("reset")
+		}
+
 		if get_json {
 			json_data = map[string]interface{}{}
 			for key, value := range forecast_now {
 				json_data[key] = value
 			}
 		} else {
-			fmt.Printf("%s (%s)\n", forecast_now["city"], BASE_URL+city)
-			fmt.Printf("Сейчас: %s, %s, ночью: %s\n", forecast_now["term_now"], forecast_now["desc_now"], forecast_now["term_night"])
+			fmt.Printf("%s (%s)\n", forecast_now["city"], cl_yellow+BASE_URL+city+cl_reset)
+			fmt.Printf("Сейчас: %s, %s, ночью: %s\n",
+				cl_green+forecast_now["term_now"]+cl_reset,
+				cl_green+forecast_now["desc_now"]+cl_reset,
+				cl_green+forecast_now["term_night"]+cl_reset,
+			)
 			fmt.Printf("%s\n", forecast_now["pressure"])
 			fmt.Printf("%s\n", forecast_now["humidity"])
 			fmt.Printf("%s\n", forecast_now["wind"])
@@ -150,7 +166,12 @@ func main() {
 				json_data["next_days"] = forecast_next
 			} else {
 				fmt.Printf("──────────────────────────────────────────────────────\n")
-				fmt.Printf("%12s %5s %26s %8s\n", "дата", "ºC", "погода", "ºC ночью")
+				fmt.Printf("%s%12s%s %s%5s%s %s%26s%s %s%8s%s\n",
+					cl_blue, "дата", cl_reset,
+					cl_blue, "ºC", cl_reset,
+					cl_blue, "погода", cl_reset,
+					cl_blue, "ºC ночью", cl_reset,
+				)
 				fmt.Printf("──────────────────────────────────────────────────────\n")
 				for _, row := range forecast_next {
 					fmt.Printf("%12s %5s %26s %8s\n", row["date"], row["term"], row["desc"], row["term_night"])

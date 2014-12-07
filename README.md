@@ -7,9 +7,12 @@ Usage:
     go get github.com/msoap/yandex-weather-cli
     cp $GOPATH/bin/yandex-weather-cli ~/bin/yandex-weather
 
+    yandex-weather -help
     yandex-weather
     yandex-weather kiev
     yandex-weather london
+    # JSON out
+    yandex-weather -json london
 
 Screenshot:
 -----------

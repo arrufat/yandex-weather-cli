@@ -7,7 +7,10 @@ usage:
 
 	./yandex-weather
 	./yandex-weather kiev
-	./yandex-weather london
+	./yandex-weather kiev
+
+	# JSON out
+	./yandex-weather -json london
 
 https://github.com/msoap/yandex-weather-cli
 

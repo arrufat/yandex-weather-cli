@@ -1,7 +1,7 @@
 Command line interface for Yandex weather service
 =================================================
 
-usage:
+Usage:
 ------
 
 	go get github.com/msoap/yandex-weather-cli
@@ -10,3 +10,10 @@ usage:
 	yandex-weather
 	yandex-weather kiev
 	yandex-weather london
+
+Screenshot:
+-----------
+
+![Screenshot](https://raw.githubusercontent.com/msoap/msoap.github.com/master/img/yandex-weather.go.2014-12-07.screenshot.png =508x391)
+
+[[ https://raw.githubusercontent.com/msoap/msoap.github.com/master/img/yandex-weather.go.2014-12-07.screenshot.png | height=391px ]]

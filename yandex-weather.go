@@ -105,9 +105,9 @@ func main() {
 	fmt.Printf("%s\n", forecast_now["humidity"])
 	fmt.Printf("%s\n", forecast_now["wind"])
 
-	fmt.Printf("------------------------------------------------------\n")
+	fmt.Printf("──────────────────────────────────────────────────────\n")
 	fmt.Printf("%12s %5s %26s %8s\n", "дата", "ºC", "погода", "ºC ночью")
-	fmt.Printf("------------------------------------------------------\n")
+	fmt.Printf("──────────────────────────────────────────────────────\n")
 	for _, row := range forecast_next {
 		fmt.Printf("%12s %5s %26s %8s\n", row["date"], row["term"], row["desc"], row["term_night"])
 	}

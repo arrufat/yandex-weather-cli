@@ -13,7 +13,4 @@ Usage:
 
 Screenshot:
 -----------
-
-![Screenshot](https://raw.githubusercontent.com/msoap/msoap.github.com/master/img/yandex-weather.go.2014-12-07.screenshot.png)
-
 <img src="https://raw.githubusercontent.com/msoap/msoap.github.com/master/img/yandex-weather.go.2014-12-07.screenshot.png" align="center" alt="Screenshot" height="391" width="508">

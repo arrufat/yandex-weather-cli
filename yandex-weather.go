@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"net/http/cookiejar"
 	"os"
@@ -42,7 +43,7 @@ func get_weather_raw(city string) *http.Response {
 	weather_url := BASE_URL + city
 	request, err := http.NewRequest("GET", weather_url, nil)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	request.Header.Set("User-Agent", USER_AGENT)
@@ -50,13 +51,13 @@ func get_weather_raw(city string) *http.Response {
 	// create request for set cookies only
 	response, err := client.Do(request)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	response, err = client.Get(weather_url)
 
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	return response
@@ -66,7 +67,7 @@ func get_weather_raw(city string) *http.Response {
 func get_weather(http_response *http.Response) (map[string]string, []map[string]string) {
 	doc, err := goquery.NewDocumentFromResponse(http_response)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	forecast_now := map[string]string{}

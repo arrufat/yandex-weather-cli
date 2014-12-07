@@ -15,6 +15,8 @@ https://github.com/msoap/yandex-weather-cli
 package main
 
 import (
+	"encoding/json"
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
@@ -108,26 +110,54 @@ func get_weather(http_response *http.Response) (map[string]string, []map[string]
 
 //-----------------------------------------------------------------------------
 func main() {
+	get_json := false
+	flag.BoolVar(&get_json, "json", false, "get JSON")
+	flag.Usage = func() {
+		fmt.Printf("Usage: %s [options] [city]\noptions:\n", os.Args[0])
+		flag.PrintDefaults()
+		fmt.Printf("\nexamples:\n  %s kiev\n  %s -json london\n", os.Args[0], os.Args[0])
+	}
+	flag.Parse()
+
 	city := ""
-	if len(os.Args) >= 2 {
-		city = os.Args[1]
+
+	if flag.NArg() >= 1 {
+		city = flag.Args()[0]
 	}
 
 	forecast_now, forecast_next := get_weather(get_weather_raw(city))
 	if _, ok := forecast_now["city"]; ok {
-		fmt.Printf("%s (%s)\n", forecast_now["city"], BASE_URL+city)
-		fmt.Printf("Сейчас: %s, %s, ночью: %s\n", forecast_now["term_now"], forecast_now["desc_now"], forecast_now["term_night"])
-		fmt.Printf("%s\n", forecast_now["pressure"])
-		fmt.Printf("%s\n", forecast_now["humidity"])
-		fmt.Printf("%s\n", forecast_now["wind"])
+		var json_data map[string]interface{}
+
+		if get_json {
+			json_data = map[string]interface{}{}
+			for key, value := range forecast_now {
+				json_data[key] = value
+			}
+		} else {
+			fmt.Printf("%s (%s)\n", forecast_now["city"], BASE_URL+city)
+			fmt.Printf("Сейчас: %s, %s, ночью: %s\n", forecast_now["term_now"], forecast_now["desc_now"], forecast_now["term_night"])
+			fmt.Printf("%s\n", forecast_now["pressure"])
+			fmt.Printf("%s\n", forecast_now["humidity"])
+			fmt.Printf("%s\n", forecast_now["wind"])
+		}
 
 		if len(forecast_next) > 0 {
-			fmt.Printf("──────────────────────────────────────────────────────\n")
-			fmt.Printf("%12s %5s %26s %8s\n", "дата", "ºC", "погода", "ºC ночью")
-			fmt.Printf("──────────────────────────────────────────────────────\n")
-			for _, row := range forecast_next {
-				fmt.Printf("%12s %5s %26s %8s\n", row["date"], row["term"], row["desc"], row["term_night"])
+			if get_json {
+				json_data["next_days"] = forecast_next
+			} else {
+				fmt.Printf("──────────────────────────────────────────────────────\n")
+				fmt.Printf("%12s %5s %26s %8s\n", "дата", "ºC", "погода", "ºC ночью")
+				fmt.Printf("──────────────────────────────────────────────────────\n")
+				for _, row := range forecast_next {
+					fmt.Printf("%12s %5s %26s %8s\n", row["date"], row["term"], row["desc"], row["term_night"])
+				}
 			}
+		}
+
+		if get_json {
+			json, _ := json.Marshal(json_data)
+			fmt.Println(string(json))
 		}
 	} else {
 		fmt.Printf("City \"%s\" dont found\n", city)

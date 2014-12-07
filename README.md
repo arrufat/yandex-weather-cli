@@ -4,12 +4,12 @@ Command line interface for Yandex weather service
 Usage:
 ------
 
-	go get github.com/msoap/yandex-weather-cli
+    go get github.com/msoap/yandex-weather-cli
     cp $GOPATH/bin/yandex-weather-cli ~/bin/yandex-weather
 
-	yandex-weather
-	yandex-weather kiev
-	yandex-weather london
+    yandex-weather
+    yandex-weather kiev
+    yandex-weather london
 
 Screenshot:
 -----------

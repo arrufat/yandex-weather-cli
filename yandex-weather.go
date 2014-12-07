@@ -100,16 +100,22 @@ func main() {
 	}
 
 	forecast_now, forecast_next := get_weather(get_weather_raw(city))
-	fmt.Printf("%s (%s)\n", forecast_now["city"], BASE_URL+city)
-	fmt.Printf("Сейчас: %s, %s, ночью: %s\n", forecast_now["term_now"], forecast_now["desc_now"], forecast_now["term_night"])
-	fmt.Printf("%s\n", forecast_now["pressure"])
-	fmt.Printf("%s\n", forecast_now["humidity"])
-	fmt.Printf("%s\n", forecast_now["wind"])
+	if _, ok := forecast_now["city"]; ok {
+		fmt.Printf("%s (%s)\n", forecast_now["city"], BASE_URL+city)
+		fmt.Printf("Сейчас: %s, %s, ночью: %s\n", forecast_now["term_now"], forecast_now["desc_now"], forecast_now["term_night"])
+		fmt.Printf("%s\n", forecast_now["pressure"])
+		fmt.Printf("%s\n", forecast_now["humidity"])
+		fmt.Printf("%s\n", forecast_now["wind"])
 
-	fmt.Printf("──────────────────────────────────────────────────────\n")
-	fmt.Printf("%12s %5s %26s %8s\n", "дата", "ºC", "погода", "ºC ночью")
-	fmt.Printf("──────────────────────────────────────────────────────\n")
-	for _, row := range forecast_next {
-		fmt.Printf("%12s %5s %26s %8s\n", row["date"], row["term"], row["desc"], row["term_night"])
+		if len(forecast_next) > 0 {
+			fmt.Printf("──────────────────────────────────────────────────────\n")
+			fmt.Printf("%12s %5s %26s %8s\n", "дата", "ºC", "погода", "ºC ночью")
+			fmt.Printf("──────────────────────────────────────────────────────\n")
+			for _, row := range forecast_next {
+				fmt.Printf("%12s %5s %26s %8s\n", row["date"], row["term"], row["desc"], row["term_night"])
+			}
+		}
+	} else {
+		fmt.Printf("City \"%s\" dont found\n", city)
 	}
 }

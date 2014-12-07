@@ -1,3 +1,17 @@
+/*
+
+Command line interface for Yandex weather service (https://pogoda.yandex.ru/)
+
+usage:
+	go build yandex-weather.go
+
+	./yandex-weather
+	./yandex-weather kiev
+	./yandex-weather london
+
+https://github.com/msoap/yandex-weather-cli
+
+*/
 package main
 
 import (

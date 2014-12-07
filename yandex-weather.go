@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	BASE_URL      = "http://pogoda.yandex.ru/"
+	BASE_URL      = "https://pogoda.yandex.ru/"
 	USER_AGENT    = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/600.1.25 (KHTML, like Gecko) Version/8.0 Safari/600.1.25"
 	FORECAST_DAYS = 10
 )

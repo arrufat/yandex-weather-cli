@@ -8,7 +8,6 @@ usage:
 	./yandex-weather
 	./yandex-weather -no-color
 	./yandex-weather kiev
-	./yandex-weather kiev
 
 	# JSON out
 	./yandex-weather -json london

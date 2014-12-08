@@ -182,9 +182,9 @@ func render(forecast_now map[string]string, forecast_next []map[string]string, c
 				fmt.Printf("──────────────────────────────────────────────────────\n")
 				fmt.Printf("%s%12s%s %s%5s%s %s%-26s%s %s%8s%s\n",
 					cl_blue, "дата", cl_reset,
-					cl_blue, "ºC", cl_reset,
+					cl_blue, "°C", cl_reset,
 					cl_blue, "погода", cl_reset,
-					cl_blue, "ºC ночью", cl_reset,
+					cl_blue, "°C ночью", cl_reset,
 				)
 				fmt.Printf("──────────────────────────────────────────────────────\n")
 				for _, row := range forecast_next {

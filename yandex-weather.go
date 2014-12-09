@@ -41,7 +41,7 @@ const (
 
 // SELECTORS - css selectors for forecast today
 var SELECTORS = map[string]string{
-	"city":       "h1.navigation-city__city",
+	"city":       "div.navigation-city h1",
 	"term_now":   "div.current-weather div.current-weather__thermometer_type_now",
 	"term_night": "div.current-weather div.current-weather__thermometer_type_after",
 	"desc_now":   "div.current-weather span.current-weather__comment",

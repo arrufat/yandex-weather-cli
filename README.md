@@ -4,6 +4,7 @@ Command line interface for Yandex weather service
 Usage:
 ------
 
+    # install
     go get github.com/msoap/yandex-weather-cli
     cp $GOPATH/bin/yandex-weather-cli ~/bin/yandex-weather
 
@@ -23,7 +24,7 @@ Usage:
 
 Screenshot:
 -----------
-<img src="https://raw.githubusercontent.com/msoap/msoap.github.com/master/img/yandex-weather.go.2014-12-07.2.screenshot.png" align="center" alt="Screenshot" height="387" width="476">
+<img src="https://raw.githubusercontent.com/msoap/msoap.github.com/master/img/yandex-weather.go.2014-12-09.0.screenshot.png" align="center" alt="Screenshot" height="439" width="604">
 
 Links:
 ------

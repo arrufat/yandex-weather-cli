@@ -41,13 +41,16 @@ const (
 
 // SELECTORS - css selectors for forecast today
 var SELECTORS = map[string]string{
-	"city":       "div.navigation-city h1",
-	"term_now":   "div.current-weather div.current-weather__thermometer_type_now",
-	"term_night": "div.current-weather div.current-weather__thermometer_type_after",
-	"desc_now":   "div.current-weather span.current-weather__comment",
-	"wind":       "div.current-weather div.current-weather__info-row:nth-child(2)",
-	"humidity":   "div.current-weather div.current-weather__info-row:nth-child(3)",
-	"pressure":   "div.current-weather div.current-weather__info-row:nth-child(4)",
+	"city":                "div.navigation-city h1",
+	"term_now":            "div.current-weather div.current-weather__thermometer_type_now",
+	"term_another_name1":  "span.current-weather__col:nth-child(3) span.current-weather__thermometer-name",
+	"term_another_name2":  "span.current-weather__col:nth-child(4) span.current-weather__thermometer-name",
+	"term_another_value1": "span.current-weather__col:nth-child(3) div.current-weather__thermometer",
+	"term_another_value2": "span.current-weather__col:nth-child(4) div.current-weather__thermometer",
+	"desc_now":            "div.current-weather span.current-weather__comment",
+	"wind":                "div.current-weather div.current-weather__info-row:nth-child(2)",
+	"humidity":            "div.current-weather div.current-weather__info-row:nth-child(3)",
+	"pressure":            "div.current-weather div.current-weather__info-row:nth-child(4)",
 }
 
 // SELECTORS_NEXT_DAYS - css selectors for forecast next days
@@ -164,10 +167,13 @@ func render(forecast_now map[string]string, forecast_next []map[string]string, c
 			}
 		} else {
 			fmt.Printf("%s (%s)\n", forecast_now["city"], cl_yellow+BASE_URL+city+cl_reset)
-			fmt.Printf("Сейчас: %s, %s, ночью: %s\n",
+			fmt.Printf("Сейчас: %s, %s, %s: %s, %s: %s\n",
 				cl_green+forecast_now["term_now"]+cl_reset,
 				cl_green+forecast_now["desc_now"]+cl_reset,
-				cl_green+forecast_now["term_night"]+cl_reset,
+				forecast_now["term_another_name1"],
+				cl_green+forecast_now["term_another_value1"]+" °C"+cl_reset,
+				forecast_now["term_another_name2"],
+				cl_green+forecast_now["term_another_value2"]+" °C"+cl_reset,
 			)
 			fmt.Printf("%s\n", forecast_now["pressure"])
 			fmt.Printf("%s\n", forecast_now["humidity"])

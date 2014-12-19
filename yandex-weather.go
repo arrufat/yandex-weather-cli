@@ -184,16 +184,16 @@ func render(forecast_now map[string]string, forecast_next []map[string]string, c
 			if get_json {
 				json_data["next_days"] = forecast_next
 			} else {
-				fmt.Printf("───────────────────────────────────────────────────────────────\n")
-				fmt.Printf("%s%12s%s %s%5s%s %s%-35s%s %s%8s%s\n",
+				fmt.Printf("───────────────────────────────────────────────────────────────────\n")
+				fmt.Printf("%s%12s%s %s%5s%s %s%-39s%s %s%8s%s\n",
 					cl_blue, "дата", cl_reset,
 					cl_blue, "°C", cl_reset,
 					cl_blue, "погода", cl_reset,
 					cl_blue, "°C ночью", cl_reset,
 				)
-				fmt.Printf("───────────────────────────────────────────────────────────────\n")
+				fmt.Printf("───────────────────────────────────────────────────────────────────\n")
 				for _, row := range forecast_next {
-					fmt.Printf("%12s %5s %-35s %8s\n", row["date"], row["term"], row["desc"], row["term_night"])
+					fmt.Printf("%12s %5s %-39s %8s\n", row["date"], row["term"], row["desc"], row["term_night"])
 				}
 			}
 		}

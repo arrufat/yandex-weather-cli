@@ -25,6 +25,7 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	"os"
+	"strings"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/mgutz/ansi"
@@ -145,6 +146,20 @@ func get_params() (string, bool, bool) {
 }
 
 //-----------------------------------------------------------------------------
+// get max length of string in slice of map of string
+func get_max_length_in_slice(list []map[string]string, key string) int {
+	max_lengh := 0
+	for _, row := range list {
+		length := len([]rune(row[key]))
+		if max_lengh < length {
+			max_lengh = length
+		}
+	}
+
+	return max_lengh
+}
+
+//-----------------------------------------------------------------------------
 // render data as text or JSON
 func render(forecast_now map[string]string, forecast_next []map[string]string, city string, get_json, no_color bool) {
 	if _, ok := forecast_now["city"]; ok {
@@ -184,16 +199,17 @@ func render(forecast_now map[string]string, forecast_next []map[string]string, c
 			if get_json {
 				json_data["next_days"] = forecast_next
 			} else {
-				fmt.Printf("────────────────────────────────────────────────────────────────────────────\n")
-				fmt.Printf("%s%12s%s %s%5s%s %s%-48s%s %s%8s%s\n",
+				desc_length := get_max_length_in_slice(forecast_next, "desc")
+				fmt.Printf("%s\n", strings.Repeat("─", 28+desc_length))
+				fmt.Printf("%s%12s%s %s%5s%s %s%-*s%s %s%8s%s\n",
 					cl_blue, "дата", cl_reset,
 					cl_blue, "°C", cl_reset,
-					cl_blue, "погода", cl_reset,
+					cl_blue, desc_length, "погода", cl_reset,
 					cl_blue, "°C ночью", cl_reset,
 				)
-				fmt.Printf("────────────────────────────────────────────────────────────────────────────\n")
+				fmt.Printf("%s\n", strings.Repeat("─", 28+desc_length))
 				for _, row := range forecast_next {
-					fmt.Printf("%12s %5s %-48s %8s\n", row["date"], row["term"], row["desc"], row["term_night"])
+					fmt.Printf("%12s %5s %-*s %8s\n", row["date"], row["term"], desc_length, row["desc"], row["term_night"])
 				}
 			}
 		}

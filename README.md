@@ -22,6 +22,9 @@ Usage:
     # JSON out
     yandex-weather -json london
 
+    # update
+    go get -u github.com/msoap/yandex-weather-cli
+
 Screenshot:
 -----------
 <img src="https://raw.githubusercontent.com/msoap/msoap.github.com/master/img/yandex-weather.go.2014-12-10.0.screenshot.png" align="center" alt="Screenshot" height="439" width="604">

@@ -25,6 +25,7 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	"os"
+	"regexp"
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
@@ -160,6 +161,14 @@ func get_max_length_in_slice(list []map[string]string, key string) int {
 }
 
 //-----------------------------------------------------------------------------
+// clear all non numeric symbols in string
+func clear_integer_in_string(in string) (out string) {
+	clear_re := regexp.MustCompile(`[^\d−]+`)
+	out = clear_re.ReplaceAllString(in, "")
+	return out
+}
+
+//-----------------------------------------------------------------------------
 // render data as text or JSON
 func render(forecast_now map[string]string, forecast_next []map[string]string, city string, get_json, no_color bool) {
 	if _, ok := forecast_now["city"]; ok {
@@ -201,7 +210,8 @@ func render(forecast_now map[string]string, forecast_next []map[string]string, c
 			} else {
 				desc_length := get_max_length_in_slice(forecast_next, "desc")
 				fmt.Printf("%s\n", strings.Repeat("─", 28+desc_length))
-				fmt.Printf("%s%12s%s %s%5s%s %s%-*s%s %s%8s%s\n",
+				fmt.Printf(
+					"%s%12s%s %s%5s%s %s%-*s%s %s%8s%s\n",
 					cl_blue, "дата", cl_reset,
 					cl_blue, "°C", cl_reset,
 					cl_blue, desc_length, "погода", cl_reset,
@@ -209,7 +219,14 @@ func render(forecast_now map[string]string, forecast_next []map[string]string, c
 				)
 				fmt.Printf("%s\n", strings.Repeat("─", 28+desc_length))
 				for _, row := range forecast_next {
-					fmt.Printf("%12s %5s %-*s %8s\n", row["date"], row["term"], desc_length, row["desc"], row["term_night"])
+					fmt.Printf(
+						"%12s %5s %-*s %8s\n",
+						row["date"],
+						clear_integer_in_string(row["term"]),
+						desc_length,
+						row["desc"],
+						clear_integer_in_string(row["term_night"]),
+					)
 				}
 			}
 		}

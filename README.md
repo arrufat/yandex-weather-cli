@@ -1,8 +1,8 @@
 Command line interface for Yandex weather service
 =================================================
 
-Usage:
-------
+Usage
+-----
 
     # install
     go get github.com/msoap/yandex-weather-cli
@@ -25,12 +25,12 @@ Usage:
     # update
     go get -u github.com/msoap/yandex-weather-cli
 
-Screenshot:
------------
+Screenshot
+----------
 <img src="https://raw.githubusercontent.com/msoap/msoap.github.com/master/img/yandex-weather.go.2014-12-10.0.screenshot.png" align="center" alt="Screenshot" height="439" width="604">
 
-Links:
-------
+See also
+--------
 
   * [pogoda.yandex.ru](https://pogoda.yandex.ru/)
   * [github.com/jfrazelle/weather](https://github.com/jfrazelle/weather) - another weather command line client (Go)

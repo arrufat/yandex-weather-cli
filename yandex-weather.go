@@ -217,12 +217,13 @@ func render(forecast_now map[string]string, forecast_next []map[string]string, c
 		var json_data map[string]interface{}
 
 		var (
-			cl_green, cl_blue, cl_yellow, cl_reset string
+			cl_green, cl_blue, cl_yellow, cl_red, cl_reset string
 		)
 		if !no_color {
 			cl_green = ansi.ColorCode("green")
 			cl_blue = ansi.ColorCode("blue")
 			cl_yellow = ansi.ColorCode("yellow")
+			cl_red = ansi.ColorCode("red")
 			cl_reset = ansi.ColorCode("reset")
 		}
 
@@ -264,10 +265,13 @@ func render(forecast_now map[string]string, forecast_next []map[string]string, c
 					cl_blue, "°C ночью", cl_reset,
 				)
 				fmt.Printf("%s\n", strings.Repeat("─", 27+desc_length))
+
+				weekend_re := regexp.MustCompile(`(сб|вс)`)
 				for _, row := range forecast_next {
+					date := weekend_re.ReplaceAllString(row["date"], cl_red+"$1"+cl_reset)
 					fmt.Printf(
 						" %10s %3s° %-*s %7s°\n",
-						row["date"],
+						date,
 						clear_integer_in_string(row["term"]),
 						desc_length,
 						row["desc"],

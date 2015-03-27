@@ -26,7 +26,9 @@ import (
 	"net/http/cookiejar"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/mgutz/ansi"
@@ -95,6 +97,35 @@ func get_weather_page(city string) *http.Response {
 }
 
 //-----------------------------------------------------------------------------
+// suggest date from one day, returns human date and json date
+func suggest_date(date string, order_num int) (string, string) {
+	day, err := strconv.Atoi(clear_integer_in_string(date))
+	if err != nil {
+		return date, date
+	}
+
+	from := time.Now().AddDate(0, 0, order_num)
+	i := 0
+	for day != from.Day() && i < 3 {
+		from = from.AddDate(0, 0, 1)
+		i++
+	}
+
+	weekdays_ru := [...]string{
+		"вс",
+		"пн",
+		"вт",
+		"ср",
+		"чт",
+		"пт",
+		"сб",
+	}
+
+	return from.Format("02.01") + " (" + weekdays_ru[from.Weekday()] + ")",
+		from.Format("2006-01-02")
+}
+
+//-----------------------------------------------------------------------------
 // parse html via goquery, find DOM-nodes with weather forecast data
 func get_weather(http_response *http.Response) (map[string]string, []map[string]string) {
 	doc, err := goquery.NewDocumentFromResponse(http_response)
@@ -125,6 +156,11 @@ func get_weather(http_response *http.Response) (map[string]string, []map[string]
 
 			forecast_next[i][name] = selection.Text()
 		})
+	}
+
+	// suggest dates
+	for i := range forecast_next {
+		forecast_next[i]["date"], forecast_next[i]["json_date"] = suggest_date(forecast_next[i]["date"], i)
 	}
 
 	return forecast_now, forecast_next
@@ -212,21 +248,25 @@ func render(forecast_now map[string]string, forecast_next []map[string]string, c
 
 		if len(forecast_next) > 0 {
 			if get_json {
+				for _, row := range forecast_next {
+					row["date"] = row["json_date"]
+					delete(row, "json_date")
+				}
 				json_data["next_days"] = forecast_next
 			} else {
 				desc_length := get_max_length_in_slice(forecast_next, "desc")
-				fmt.Printf("%s\n", strings.Repeat("─", 28+desc_length))
+				fmt.Printf("%s\n", strings.Repeat("─", 27+desc_length))
 				fmt.Printf(
-					"%s%12s%s %s%5s%s %s%-*s%s %s%8s%s\n",
+					" %s%-10s%s %s%4s%s %s%-*s%s %s%8s%s\n",
 					cl_blue, "дата", cl_reset,
 					cl_blue, "°C", cl_reset,
 					cl_blue, desc_length, "погода", cl_reset,
 					cl_blue, "°C ночью", cl_reset,
 				)
-				fmt.Printf("%s\n", strings.Repeat("─", 28+desc_length))
+				fmt.Printf("%s\n", strings.Repeat("─", 27+desc_length))
 				for _, row := range forecast_next {
 					fmt.Printf(
-						"%12s %4s° %-*s %7s°\n",
+						" %10s %3s° %-*s %7s°\n",
 						row["date"],
 						clear_integer_in_string(row["term"]),
 						desc_length,

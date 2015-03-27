@@ -104,9 +104,15 @@ func get_weather(http_response *http.Response) (map[string]string, []map[string]
 
 	forecast_now := map[string]string{}
 
+	re_remove_desc := regexp.MustCompile(`^.+\s*:\s*`)
 	for name, selector := range SELECTORS {
 		doc.Find(selector).Each(func(i int, selection *goquery.Selection) {
 			forecast_now[name] = selection.Text()
+			// clear description in values
+			switch name {
+			case "humidity", "pressure", "wind":
+				forecast_now[name] = re_remove_desc.ReplaceAllString(forecast_now[name], "")
+			}
 		})
 	}
 
@@ -199,9 +205,9 @@ func render(forecast_now map[string]string, forecast_next []map[string]string, c
 				forecast_now["term_another_name2"],
 				cl_green+forecast_now["term_another_value2"]+" °C"+cl_reset,
 			)
-			fmt.Printf("%s\n", forecast_now["pressure"])
-			fmt.Printf("%s\n", forecast_now["humidity"])
-			fmt.Printf("%s\n", forecast_now["wind"])
+			fmt.Printf("Давление: %s\n", forecast_now["pressure"])
+			fmt.Printf("Влажность: %s\n", forecast_now["humidity"])
+			fmt.Printf("Ветер: %s\n", forecast_now["wind"])
 		}
 
 		if len(forecast_next) > 0 {

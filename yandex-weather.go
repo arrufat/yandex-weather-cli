@@ -226,7 +226,7 @@ func render(forecast_now map[string]string, forecast_next []map[string]string, c
 				fmt.Printf("%s\n", strings.Repeat("─", 28+desc_length))
 				for _, row := range forecast_next {
 					fmt.Printf(
-						"%12s %5s %-*s %8s\n",
+						"%12s %4s° %-*s %7s°\n",
 						row["date"],
 						clear_integer_in_string(row["term"]),
 						desc_length,

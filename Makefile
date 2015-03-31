@@ -14,20 +14,17 @@ build-all-platform:
 			GOOS=$$GOOS GOARCH=$$GOARCH go build; \
 			if [ $$GOOS == windows ]; \
 			then \
-				zip -9 yandex-weather-cli_$(VERSION).$$GOARCH.$$GOOS.zip yandex-weather-cli.exe README.md LICENSE; \
+				zip -9 yandex-weather-cli-$(VERSION).$$GOARCH.$$GOOS.zip yandex-weather-cli.exe README.md LICENSE; \
 				rm yandex-weather-cli.exe; \
 			else \
-				zip -9 yandex-weather-cli_$(VERSION).$$GOARCH.$$GOOS.zip yandex-weather-cli README.md LICENSE; \
+				zip -9 yandex-weather-cli-$(VERSION).$$GOARCH.$$GOOS.zip yandex-weather-cli README.md LICENSE; \
 				rm yandex-weather-cli; \
 			fi \
 		done \
 	done
 	GOOS=linux GOARCH=arm go build
-	@zip -9 yandex-weather-cli_$(VERSION).arm.linux.zip yandex-weather-cli README.md LICENSE
+	@zip -9 yandex-weather-cli-$(VERSION).arm.linux.zip yandex-weather-cli README.md LICENSE
 	@rm yandex-weather-cli
-
-zip-all-platform:
-	ls yandex-weather-cli.*.{linux,darwin,exe} | xargs -I@ zip -9 @.zip @
 
 update-from-github:
 	go get -u github.com/msoap/yandex-weather-cli

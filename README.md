@@ -1,29 +1,32 @@
 Command line interface for Yandex weather service
 =================================================
 
+Install
+-------------------
+
+Download binaries from: [releases](https://github.com/msoap/yandex-weather-cli/releases) (OS X/Linux/Windows/RaspberryPi)
+
+From source:
+
+    go get -u github.com/msoap/yandex-weather-cli
+    ln -s $GOPATH/bin/yandex-weather-cli ~/bin/
+
 Usage
 -----
 
-    # install
-    go get github.com/msoap/yandex-weather-cli
-    ln -s $GOPATH/bin/yandex-weather-cli ~/bin/yandex-weather
-
     # weather in current location
-    yandex-weather
+    yandex-weather-cli
 
     # options
-    yandex-weather -help
-    yandex-weather -no-color
+    yandex-weather-cli -help
+    yandex-weather-cli -no-color
 
     # in another city
-    yandex-weather kiev
-    yandex-weather london
+    yandex-weather-cli kiev
+    yandex-weather-cli london
 
     # JSON out
-    yandex-weather -json london
-
-    # update
-    go get -u github.com/msoap/yandex-weather-cli
+    yandex-weather-cli -json london
 
 Screenshot
 ----------

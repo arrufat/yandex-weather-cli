@@ -21,17 +21,20 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"net/http/cookiejar"
 	"os"
 	"regexp"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/mgutz/ansi"
+	"github.com/shiena/ansicolor"
 )
 
 const (
@@ -205,8 +208,21 @@ func get_max_length_in_slice(list []map[string]string, key string) int {
 //-----------------------------------------------------------------------------
 // clear all non numeric symbols in string
 func clear_integer_in_string(in string) (out string) {
-	clear_re := regexp.MustCompile(`[^\d−]+`)
-	out = clear_re.ReplaceAllString(in, "")
+	// replace dashes to minus
+	out = regexp.MustCompile(string([]byte{0xE2, 0x88, 0x92})).ReplaceAllString(in, "-")
+
+	// clear non numeric symbols
+	out = regexp.MustCompile(`[^\d-]+`).ReplaceAllString(out, "")
+
+	return out
+}
+
+//-----------------------------------------------------------------------------
+// clear all non print symbols in string
+func clear_nonprint_in_string(in string) (out string) {
+	// replace spaces
+	out = regexp.MustCompile(string([]byte{0xE2, 0x80, 0x89})).ReplaceAllString(in, " ")
+
 	return out
 }
 
@@ -215,6 +231,8 @@ func clear_integer_in_string(in string) (out string) {
 func render(forecast_now map[string]string, forecast_next []map[string]string, city string, get_json, no_color bool) {
 	if _, ok := forecast_now["city"]; ok {
 		var json_data map[string]interface{}
+		// for windows
+		out_writer := (io.Writer)(os.Stdout)
 
 		var (
 			cl_green, cl_blue, cl_yellow, cl_red, cl_reset string
@@ -225,6 +243,10 @@ func render(forecast_now map[string]string, forecast_next []map[string]string, c
 			cl_yellow = ansi.ColorCode("yellow")
 			cl_red = ansi.ColorCode("red")
 			cl_reset = ansi.ColorCode("reset")
+
+			if runtime.GOOS == "windows" {
+				out_writer = ansicolor.NewAnsiColorWriter(os.Stdout)
+			}
 		}
 
 		if get_json {
@@ -233,18 +255,18 @@ func render(forecast_now map[string]string, forecast_next []map[string]string, c
 				json_data[key] = value
 			}
 		} else {
-			fmt.Printf("%s (%s)\n", forecast_now["city"], cl_yellow+BASE_URL+city+cl_reset)
-			fmt.Printf("Сейчас: %s, %s, %s: %s, %s: %s\n",
-				cl_green+forecast_now["term_now"]+cl_reset,
-				cl_green+forecast_now["desc_now"]+cl_reset,
-				forecast_now["term_another_name1"],
-				cl_green+forecast_now["term_another_value1"]+" °C"+cl_reset,
-				forecast_now["term_another_name2"],
-				cl_green+forecast_now["term_another_value2"]+" °C"+cl_reset,
+			fmt.Fprintf(out_writer, "%s (%s)\n", forecast_now["city"], cl_yellow+BASE_URL+city+cl_reset)
+			fmt.Fprintf(out_writer, "Сейчас: %s, %s, %s: %s, %s: %s\n",
+				cl_green+clear_nonprint_in_string(forecast_now["term_now"])+cl_reset,
+				cl_green+clear_nonprint_in_string(forecast_now["desc_now"])+cl_reset,
+				clear_nonprint_in_string(forecast_now["term_another_name1"]),
+				cl_green+clear_nonprint_in_string(forecast_now["term_another_value1"])+" °C"+cl_reset,
+				clear_nonprint_in_string(forecast_now["term_another_name2"]),
+				cl_green+clear_nonprint_in_string(forecast_now["term_another_value2"])+" °C"+cl_reset,
 			)
-			fmt.Printf("Давление: %s\n", forecast_now["pressure"])
-			fmt.Printf("Влажность: %s\n", forecast_now["humidity"])
-			fmt.Printf("Ветер: %s\n", forecast_now["wind"])
+			fmt.Fprintf(out_writer, "Давление: %s\n", clear_nonprint_in_string(forecast_now["pressure"]))
+			fmt.Fprintf(out_writer, "Влажность: %s\n", clear_nonprint_in_string(forecast_now["humidity"]))
+			fmt.Fprintf(out_writer, "Ветер: %s\n", clear_nonprint_in_string(forecast_now["wind"]))
 		}
 
 		if len(forecast_next) > 0 {
@@ -256,26 +278,26 @@ func render(forecast_now map[string]string, forecast_next []map[string]string, c
 				json_data["next_days"] = forecast_next
 			} else {
 				desc_length := get_max_length_in_slice(forecast_next, "desc")
-				fmt.Printf("%s\n", strings.Repeat("─", 27+desc_length))
-				fmt.Printf(
+				fmt.Fprintf(out_writer, "%s\n", strings.Repeat("─", 27+desc_length))
+				fmt.Fprintf(out_writer,
 					" %s%-10s%s %s%4s%s %s%-*s%s %s%8s%s\n",
 					cl_blue, "дата", cl_reset,
 					cl_blue, "°C", cl_reset,
 					cl_blue, desc_length, "погода", cl_reset,
 					cl_blue, "°C ночью", cl_reset,
 				)
-				fmt.Printf("%s\n", strings.Repeat("─", 27+desc_length))
+				fmt.Fprintf(out_writer, "%s\n", strings.Repeat("─", 27+desc_length))
 
 				weekend_re := regexp.MustCompile(`(сб|вс)`)
 				for _, row := range forecast_next {
 					date := weekend_re.ReplaceAllString(row["date"], cl_red+"$1"+cl_reset)
-					fmt.Printf(
+					fmt.Fprintf(out_writer,
 						" %10s %3s° %-*s %7s°\n",
 						date,
-						clear_integer_in_string(row["term"]),
+						clear_integer_in_string(clear_nonprint_in_string(row["term"])),
 						desc_length,
 						row["desc"],
-						clear_integer_in_string(row["term_night"]),
+						clear_integer_in_string(clear_nonprint_in_string(row["term_night"])),
 					)
 				}
 			}

@@ -141,11 +141,13 @@ func get_weather(http_response *http.Response) (map[string]string, []map[string]
 	re_remove_desc := regexp.MustCompile(`^.+\s*:\s*`)
 	for name, selector := range SELECTORS {
 		doc.Find(selector).Each(func(i int, selection *goquery.Selection) {
-			forecast_now[name] = selection.Text()
+			forecast_now[name] = clear_nonprint_in_string(selection.Text())
 			// clear description in values
 			switch name {
 			case "humidity", "pressure", "wind":
 				forecast_now[name] = re_remove_desc.ReplaceAllString(forecast_now[name], "")
+			case "term_now":
+				forecast_now[name] = clear_integer_in_string(forecast_now[name])
 			}
 		})
 	}
@@ -157,13 +159,15 @@ func get_weather(http_response *http.Response) (map[string]string, []map[string]
 				forecast_next = append(forecast_next, map[string]string{})
 			}
 
-			forecast_next[i][name] = selection.Text()
+			forecast_next[i][name] = clear_nonprint_in_string(selection.Text())
 		})
 	}
 
 	// suggest dates
 	for i := range forecast_next {
 		forecast_next[i]["date"], forecast_next[i]["json_date"] = suggest_date(forecast_next[i]["date"], i)
+		forecast_next[i]["term"] = clear_integer_in_string(forecast_next[i]["term"])
+		forecast_next[i]["term_night"] = clear_integer_in_string(forecast_next[i]["term_night"])
 	}
 
 	return forecast_now, forecast_next
@@ -257,16 +261,16 @@ func render(forecast_now map[string]string, forecast_next []map[string]string, c
 		} else {
 			fmt.Fprintf(out_writer, "%s (%s)\n", forecast_now["city"], cl_yellow+BASE_URL+city+cl_reset)
 			fmt.Fprintf(out_writer, "Сейчас: %s, %s, %s: %s, %s: %s\n",
-				cl_green+clear_nonprint_in_string(forecast_now["term_now"])+cl_reset,
-				cl_green+clear_nonprint_in_string(forecast_now["desc_now"])+cl_reset,
-				clear_nonprint_in_string(forecast_now["term_another_name1"]),
-				cl_green+clear_nonprint_in_string(forecast_now["term_another_value1"])+" °C"+cl_reset,
-				clear_nonprint_in_string(forecast_now["term_another_name2"]),
-				cl_green+clear_nonprint_in_string(forecast_now["term_another_value2"])+" °C"+cl_reset,
+				cl_green+forecast_now["term_now"]+" °C"+cl_reset,
+				cl_green+forecast_now["desc_now"]+cl_reset,
+				forecast_now["term_another_name1"],
+				cl_green+forecast_now["term_another_value1"]+" °C"+cl_reset,
+				forecast_now["term_another_name2"],
+				cl_green+forecast_now["term_another_value2"]+" °C"+cl_reset,
 			)
-			fmt.Fprintf(out_writer, "Давление: %s\n", clear_nonprint_in_string(forecast_now["pressure"]))
-			fmt.Fprintf(out_writer, "Влажность: %s\n", clear_nonprint_in_string(forecast_now["humidity"]))
-			fmt.Fprintf(out_writer, "Ветер: %s\n", clear_nonprint_in_string(forecast_now["wind"]))
+			fmt.Fprintf(out_writer, "Давление: %s\n", forecast_now["pressure"])
+			fmt.Fprintf(out_writer, "Влажность: %s\n", forecast_now["humidity"])
+			fmt.Fprintf(out_writer, "Ветер: %s\n", forecast_now["wind"])
 		}
 
 		if len(forecast_next) > 0 {
@@ -294,10 +298,10 @@ func render(forecast_now map[string]string, forecast_next []map[string]string, c
 					fmt.Fprintf(out_writer,
 						" %10s %3s° %-*s %7s°\n",
 						date,
-						clear_integer_in_string(clear_nonprint_in_string(row["term"])),
+						row["term"],
 						desc_length,
 						row["desc"],
-						clear_integer_in_string(clear_nonprint_in_string(row["term_night"])),
+						row["term_night"],
 					)
 				}
 			}

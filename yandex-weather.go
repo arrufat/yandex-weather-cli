@@ -33,8 +33,8 @@ import (
 	"time"
 
 	"github.com/PuerkitoBio/goquery"
-	"github.com/mgutz/ansi"
 	"github.com/mattn/go-colorable"
+	"github.com/mgutz/ansi"
 )
 
 const (
@@ -239,40 +239,55 @@ func clear_nonprint_in_string(in string) (out string) {
 }
 
 //-----------------------------------------------------------------------------
+// convert "<red>123</> str <green>456</green>" to ansi color string
+// color -- color or simple remove color tags
+func ansi_colour_string(str string, color bool) string {
+	one_color := `(black|red|green|yellow|blue|magenta|cyan|white|\d{1,3})(\+[bBuih]+)?`
+	re := regexp.MustCompile(`<(` + one_color + `(:` + one_color + `)?|/\w*)>`)
+	result := re.ReplaceAllStringFunc(str, func(in string) string {
+		if !color {
+			return ""
+		}
+
+		out := in
+		tag := in[1 : len(in)-1]
+
+		if tag[0] == '/' {
+			out = ansi.ColorCode("reset")
+		} else {
+			out = ansi.ColorCode(tag)
+		}
+
+		return out
+	})
+
+	return result
+}
+
+//-----------------------------------------------------------------------------
 // render data as text or JSON
 func render(forecast_now map[string]interface{}, forecast_next []map[string]interface{}, city string, get_json, no_color bool) {
 	if _, ok := forecast_now["city"]; ok {
 		// for windows
 		out_writer := (io.Writer)(os.Stdout)
-
-		var (
-			cl_green, cl_blue, cl_yellow, cl_red, cl_reset string
-		)
-		if !no_color {
-			cl_green = ansi.ColorCode("green")
-			cl_blue = ansi.ColorCode("blue")
-			cl_yellow = ansi.ColorCode("yellow")
-			cl_red = ansi.ColorCode("red")
-			cl_reset = ansi.ColorCode("reset")
-
-			if runtime.GOOS == "windows" {
-				out_writer = colorable.NewColorableStdout()
-			}
+		if !no_color && runtime.GOOS == "windows" {
+			out_writer = colorable.NewColorableStdout()
 		}
 
 		if !get_json {
-			fmt.Fprintf(out_writer, "%s (%s)\n", forecast_now["city"], cl_yellow+BASE_URL+city+cl_reset)
-			fmt.Fprintf(out_writer, "Сейчас: %s%d °C%s, %s%s%s, %s: %s%d °C%s, %s: %s%d °C%s\n",
-				cl_green, forecast_now["term_now"], cl_reset,
-				cl_green, forecast_now["desc_now"], cl_reset,
+			fmt.Fprintf(out_writer, ansi_colour_string("%s (<yellow>%s</>)\n", !no_color), forecast_now["city"], BASE_URL+city)
+			fmt.Fprintf(out_writer,
+				ansi_colour_string("Сейчас: <green>%d °C</>, <green>%s</>, %s: <green>%d °C</>, %s: <green>%d °C</>\n", !no_color),
+				forecast_now["term_now"],
+				forecast_now["desc_now"],
 				forecast_now["term_another_name1"],
-				cl_green, forecast_now["term_another_value1"], cl_reset,
+				forecast_now["term_another_value1"],
 				forecast_now["term_another_name2"],
-				cl_green, forecast_now["term_another_value2"], cl_reset,
+				forecast_now["term_another_value2"],
 			)
-			fmt.Fprintf(out_writer, "Давление: %s\n", forecast_now["pressure"])
-			fmt.Fprintf(out_writer, "Влажность: %s\n", forecast_now["humidity"])
-			fmt.Fprintf(out_writer, "Ветер: %s\n", forecast_now["wind"])
+			fmt.Fprintf(out_writer, ansi_colour_string("Давление: <green>%s</>\n", !no_color), forecast_now["pressure"])
+			fmt.Fprintf(out_writer, ansi_colour_string("Влажность: <green>%s</>\n", !no_color), forecast_now["humidity"])
+			fmt.Fprintf(out_writer, ansi_colour_string("Ветер: <green>%s</>\n", !no_color), forecast_now["wind"])
 		}
 
 		if len(forecast_next) > 0 {
@@ -286,17 +301,17 @@ func render(forecast_now map[string]interface{}, forecast_next []map[string]inte
 				desc_length := get_max_length_in_slice(forecast_next, "desc")
 				fmt.Fprintf(out_writer, "%s\n", strings.Repeat("─", 27+desc_length))
 				fmt.Fprintf(out_writer,
-					" %s%-10s%s %s%4s%s %s%-*s%s %s%8s%s\n",
-					cl_blue, "дата", cl_reset,
-					cl_blue, "°C", cl_reset,
-					cl_blue, desc_length, "погода", cl_reset,
-					cl_blue, "°C ночью", cl_reset,
+					ansi_colour_string("<blue+h> %-10s %4s %-*s %8s</>\n", !no_color),
+					"дата",
+					"°C",
+					desc_length, "погода",
+					"°C ночью",
 				)
 				fmt.Fprintf(out_writer, "%s\n", strings.Repeat("─", 27+desc_length))
 
 				weekend_re := regexp.MustCompile(`(сб|вс)`)
 				for _, row := range forecast_next {
-					date := weekend_re.ReplaceAllString(row["date"].(string), cl_red+"$1"+cl_reset)
+					date := weekend_re.ReplaceAllString(row["date"].(string), ansi_colour_string("<red+h>$1</>", !no_color))
 					fmt.Fprintf(out_writer,
 						" %10s %3d° %-*s %7d°\n",
 						date,

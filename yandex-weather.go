@@ -34,7 +34,7 @@ import (
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/mgutz/ansi"
-	"github.com/shiena/ansicolor"
+	"github.com/mattn/go-colorable"
 )
 
 const (
@@ -256,7 +256,7 @@ func render(forecast_now map[string]interface{}, forecast_next []map[string]inte
 			cl_reset = ansi.ColorCode("reset")
 
 			if runtime.GOOS == "windows" {
-				out_writer = ansicolor.NewAnsiColorWriter(os.Stdout)
+				out_writer = colorable.NewColorableStdout()
 			}
 		}
 

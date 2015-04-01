@@ -108,10 +108,9 @@ func suggest_date(date string, order_num int) (string, string) {
 	}
 
 	from := time.Now().AddDate(0, 0, order_num)
-	i := 0
-	for day != from.Day() && i < 3 {
+
+	for i := 0; day != from.Day() && i < 3; i++ {
 		from = from.AddDate(0, 0, 1)
-		i++
 	}
 
 	weekdays_ru := [...]string{

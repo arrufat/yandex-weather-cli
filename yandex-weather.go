@@ -128,34 +128,43 @@ func suggest_date(date string, order_num int) (string, string) {
 }
 
 //-----------------------------------------------------------------------------
+// safe convert string to int, return 0 on error
+func convert_str_to_int(str string) int {
+	number, err := strconv.Atoi(clear_integer_in_string(str))
+	if err != nil {
+		return 0
+	}
+	return number
+}
+
+//-----------------------------------------------------------------------------
 // parse html via goquery, find DOM-nodes with weather forecast data
-func get_weather(http_response *http.Response) (map[string]string, []map[string]string) {
+func get_weather(http_response *http.Response) (map[string]interface{}, []map[string]interface{}) {
 	doc, err := goquery.NewDocumentFromResponse(http_response)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	forecast_now := map[string]string{}
+	forecast_now := map[string]interface{}{}
 
 	re_remove_desc := regexp.MustCompile(`^.+\s*:\s*`)
 	for name, selector := range SELECTORS {
 		doc.Find(selector).Each(func(i int, selection *goquery.Selection) {
 			forecast_now[name] = clear_nonprint_in_string(selection.Text())
-			// clear description in values
 			switch name {
 			case "humidity", "pressure", "wind":
-				forecast_now[name] = re_remove_desc.ReplaceAllString(forecast_now[name], "")
-			case "term_now":
-				forecast_now[name] = clear_integer_in_string(forecast_now[name])
+				forecast_now[name] = re_remove_desc.ReplaceAllString(forecast_now[name].(string), "")
+			case "term_now", "term_another_value1", "term_another_value2":
+				forecast_now[name] = convert_str_to_int(forecast_now[name].(string))
 			}
 		})
 	}
 
-	forecast_next := make([]map[string]string, 0, FORECAST_DAYS)
+	forecast_next := make([]map[string]interface{}, 0, FORECAST_DAYS)
 	for name, selector := range SELECTORS_NEXT_DAYS {
 		doc.Find(selector).Each(func(i int, selection *goquery.Selection) {
 			if len(forecast_next)-1 < i {
-				forecast_next = append(forecast_next, map[string]string{})
+				forecast_next = append(forecast_next, map[string]interface{}{})
 			}
 
 			forecast_next[i][name] = clear_nonprint_in_string(selection.Text())
@@ -164,9 +173,9 @@ func get_weather(http_response *http.Response) (map[string]string, []map[string]
 
 	// suggest dates
 	for i := range forecast_next {
-		forecast_next[i]["date"], forecast_next[i]["json_date"] = suggest_date(forecast_next[i]["date"], i)
-		forecast_next[i]["term"] = clear_integer_in_string(forecast_next[i]["term"])
-		forecast_next[i]["term_night"] = clear_integer_in_string(forecast_next[i]["term_night"])
+		forecast_next[i]["date"], forecast_next[i]["json_date"] = suggest_date(forecast_next[i]["date"].(string), i)
+		forecast_next[i]["term"] = convert_str_to_int(forecast_next[i]["term"].(string))
+		forecast_next[i]["term_night"] = convert_str_to_int(forecast_next[i]["term_night"].(string))
 	}
 
 	return forecast_now, forecast_next
@@ -196,10 +205,10 @@ func get_params() (string, bool, bool) {
 
 //-----------------------------------------------------------------------------
 // get max length of string in slice of map of string
-func get_max_length_in_slice(list []map[string]string, key string) int {
+func get_max_length_in_slice(list []map[string]interface{}, key string) int {
 	max_lengh := 0
 	for _, row := range list {
-		length := len([]rune(row[key]))
+		length := len([]rune(row[key].(string)))
 		if max_lengh < length {
 			max_lengh = length
 		}
@@ -231,9 +240,8 @@ func clear_nonprint_in_string(in string) (out string) {
 
 //-----------------------------------------------------------------------------
 // render data as text or JSON
-func render(forecast_now map[string]string, forecast_next []map[string]string, city string, get_json, no_color bool) {
+func render(forecast_now map[string]interface{}, forecast_next []map[string]interface{}, city string, get_json, no_color bool) {
 	if _, ok := forecast_now["city"]; ok {
-		var json_data map[string]interface{}
 		// for windows
 		out_writer := (io.Writer)(os.Stdout)
 
@@ -252,20 +260,15 @@ func render(forecast_now map[string]string, forecast_next []map[string]string, c
 			}
 		}
 
-		if get_json {
-			json_data = map[string]interface{}{}
-			for key, value := range forecast_now {
-				json_data[key] = value
-			}
-		} else {
+		if !get_json {
 			fmt.Fprintf(out_writer, "%s (%s)\n", forecast_now["city"], cl_yellow+BASE_URL+city+cl_reset)
-			fmt.Fprintf(out_writer, "Сейчас: %s, %s, %s: %s, %s: %s\n",
-				cl_green+forecast_now["term_now"]+" °C"+cl_reset,
-				cl_green+forecast_now["desc_now"]+cl_reset,
+			fmt.Fprintf(out_writer, "Сейчас: %s%d °C%s, %s%s%s, %s: %s%d °C%s, %s: %s%d °C%s\n",
+				cl_green, forecast_now["term_now"], cl_reset,
+				cl_green, forecast_now["desc_now"], cl_reset,
 				forecast_now["term_another_name1"],
-				cl_green+forecast_now["term_another_value1"]+" °C"+cl_reset,
+				cl_green, forecast_now["term_another_value1"], cl_reset,
 				forecast_now["term_another_name2"],
-				cl_green+forecast_now["term_another_value2"]+" °C"+cl_reset,
+				cl_green, forecast_now["term_another_value2"], cl_reset,
 			)
 			fmt.Fprintf(out_writer, "Давление: %s\n", forecast_now["pressure"])
 			fmt.Fprintf(out_writer, "Влажность: %s\n", forecast_now["humidity"])
@@ -278,7 +281,7 @@ func render(forecast_now map[string]string, forecast_next []map[string]string, c
 					row["date"] = row["json_date"]
 					delete(row, "json_date")
 				}
-				json_data["next_days"] = forecast_next
+				forecast_now["next_days"] = forecast_next
 			} else {
 				desc_length := get_max_length_in_slice(forecast_next, "desc")
 				fmt.Fprintf(out_writer, "%s\n", strings.Repeat("─", 27+desc_length))
@@ -293,21 +296,21 @@ func render(forecast_now map[string]string, forecast_next []map[string]string, c
 
 				weekend_re := regexp.MustCompile(`(сб|вс)`)
 				for _, row := range forecast_next {
-					date := weekend_re.ReplaceAllString(row["date"], cl_red+"$1"+cl_reset)
+					date := weekend_re.ReplaceAllString(row["date"].(string), cl_red+"$1"+cl_reset)
 					fmt.Fprintf(out_writer,
-						" %10s %3s° %-*s %7s°\n",
+						" %10s %3d° %-*s %7d°\n",
 						date,
-						row["term"],
+						row["term"].(int),
 						desc_length,
 						row["desc"],
-						row["term_night"],
+						row["term_night"].(int),
 					)
 				}
 			}
 		}
 
 		if get_json {
-			json, _ := json.Marshal(json_data)
+			json, _ := json.Marshal(forecast_now)
 			fmt.Println(string(json))
 		}
 	} else {

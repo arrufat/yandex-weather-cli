@@ -30,7 +30,7 @@ Usage
 
 Screenshot
 ----------
-<img src="https://raw.githubusercontent.com/msoap/msoap.github.com/master/img/yandex-weather.go.2015-03-28.0.screenshot.png" align="center" alt="Screenshot" height="439" width="604">
+<img src="https://raw.githubusercontent.com/msoap/yandex-weather-cli/misc/img/yandex-weather.go.2015-03-28.0.screenshot.png" align="center" alt="Screenshot" height="439" width="604">
 
 See also
 --------

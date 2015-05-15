@@ -36,6 +36,7 @@ See also
 --------
 
   * [pogoda.yandex.ru](https://pogoda.yandex.ru/)
+  * [github.com/schachmat/wego](https://github.com/schachmat/wego) - another weather command line client (Go)
   * [github.com/jfrazelle/weather](https://github.com/jfrazelle/weather) - another weather command line client (Go)
   * [github.com/sramsay/wu](https://github.com/sramsay/wu) - another weather command line client (Go)
   * [github.com/brianriley/weather-cli](https://github.com/brianriley/weather-cli) - another weather command line client (Python)

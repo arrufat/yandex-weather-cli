@@ -200,6 +200,12 @@ func get_params() (string, bool, bool) {
 		city = flag.Args()[0]
 	}
 
+	// detect pipe
+	stdout_stat, _ := os.Stdout.Stat()
+	if (stdout_stat.Mode() & os.ModeCharDevice) == 0 {
+		no_color = true
+	}
+
 	return city, get_json, no_color
 }
 

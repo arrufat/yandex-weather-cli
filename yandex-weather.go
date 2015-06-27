@@ -55,7 +55,7 @@ var SELECTORS = map[string]string{
 	"term_another_value1": "span.current-weather__col:nth-child(3) div.current-weather__thermometer",
 	"term_another_value2": "span.current-weather__col:nth-child(4) div.current-weather__thermometer",
 	"desc_now":            "div.current-weather span.current-weather__comment",
-	"wind":                "div.current-weather div.current-weather__info-row:nth-child(2)",
+	"wind":                "div.current-weather div.current-weather__info-row:nth-child(2) span.wind-speed",
 	"humidity":            "div.current-weather div.current-weather__info-row:nth-child(3)",
 	"pressure":            "div.current-weather div.current-weather__info-row:nth-child(4)",
 }

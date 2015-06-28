@@ -28,18 +28,31 @@ import (
 	"os"
 	"regexp"
 	"runtime"
-	"strconv"
 	"strings"
-	"time"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/mattn/go-colorable"
-	"github.com/mgutz/ansi"
 )
 
+// Config - application config
+type Config struct {
+	city     string
+	get_json bool
+	no_color bool
+}
+
+// HourTemp - one hour temperature
+type HourTemp struct {
+	Hour int    `json:"hour"`
+	Temp int    `json:"temp"`
+	Icon string `json:"icon"`
+}
+
 const (
-	// BASE_URL - yandex pogoda service url
+	// BASE_URL - yandex pogoda service url (testing: "http://localhost:8080/get?url=https://pogoda.yandex.ru/")
 	BASE_URL = "https://pogoda.yandex.ru/"
+	// BASE_URL_MINI - url for forecast by hours (testing: "http://localhost:8080/get?url=https://p.ya.ru/")
+	BASE_URL_MINI = "https://p.ya.ru/"
 	// USER_AGENT - for http.request
 	USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/600.1.25 (KHTML, like Gecko) Version/8.0 Safari/600.1.25"
 	// FORECAST_DAYS - parse days in forecast
@@ -68,15 +81,55 @@ var SELECTORS_NEXT_DAYS = map[string]string{
 	"term_night": "div.tabs-panes div.forecast-brief__item-temp-night",
 }
 
+// SELECTORS_BY_HOURS - get forecast by hours
+var SELECTOR_BY_HOURS = map[string]string{
+	"root": "div.temperatures div.chart_wrapper",
+	"hour": "p.th",
+	"temp": "span.chart_temperature",
+	"icon": "span:nth-child(3)",
+}
+
+// ICONS - unicode symbols for icon names
+var ICONS = map[string]string{
+	"fake_icon": "",
+	"icon_snow": "❄︎", // or "❄️"
+	"icon_rain": "☔︎", // or "☔️"
+}
+
+//-----------------------------------------------------------------------------
+// get command line parameters
+func get_params() (cfg Config) {
+	flag.BoolVar(&cfg.get_json, "json", false, "get JSON")
+	flag.BoolVar(&cfg.no_color, "no-color", false, "disable colored output")
+	flag.Usage = func() {
+		fmt.Printf("Usage: %s [options] [city]\noptions:\n", os.Args[0])
+		flag.PrintDefaults()
+		fmt.Printf("\nexamples:\n  %s kiev\n  %s -json london\n", os.Args[0], os.Args[0])
+	}
+	flag.Parse()
+
+	cfg.city = ""
+	if flag.NArg() >= 1 {
+		cfg.city = flag.Args()[0]
+	}
+
+	// detect pipe
+	stdout_stat, _ := os.Stdout.Stat()
+	if (stdout_stat.Mode() & os.ModeCharDevice) == 0 {
+		cfg.no_color = true
+	}
+
+	return cfg
+}
+
 //-----------------------------------------------------------------------------
 // get weather html page as http.Response
-func get_weather_page(city string) *http.Response {
+func get_weather_page(weather_url string) *http.Response {
 	cookie, _ := cookiejar.New(nil)
 	client := &http.Client{
 		Jar: cookie,
 	}
 
-	weather_url := BASE_URL + city
 	request, err := http.NewRequest("GET", weather_url, nil)
 	if err != nil {
 		log.Fatal(err)
@@ -100,51 +153,16 @@ func get_weather_page(city string) *http.Response {
 }
 
 //-----------------------------------------------------------------------------
-// suggest date from one day, returns human date and json date
-func suggest_date(date string, order_num int) (string, string) {
-	day, err := strconv.Atoi(clear_integer_in_string(date))
-	if err != nil {
-		return date, date
-	}
-
-	from := time.Now().AddDate(0, 0, order_num)
-
-	for i := 0; day != from.Day() && i < 3; i++ {
-		from = from.AddDate(0, 0, 1)
-	}
-
-	weekdays_ru := [...]string{
-		"вс",
-		"пн",
-		"вт",
-		"ср",
-		"чт",
-		"пт",
-		"сб",
-	}
-
-	return from.Format("02.01") + " (" + weekdays_ru[from.Weekday()] + ")",
-		from.Format("2006-01-02")
-}
-
-//-----------------------------------------------------------------------------
-// safe convert string to int, return 0 on error
-func convert_str_to_int(str string) int {
-	number, err := strconv.Atoi(clear_integer_in_string(str))
-	if err != nil {
-		return 0
-	}
-	return number
-}
-
-//-----------------------------------------------------------------------------
 // parse html via goquery, find DOM-nodes with weather forecast data
-func get_weather(http_response *http.Response) (map[string]interface{}, []map[string]interface{}) {
+func get_weather(cfg Config) (map[string]interface{}, []HourTemp, []map[string]interface{}) {
+	http_response := get_weather_page(BASE_URL + cfg.city)
+
 	doc, err := goquery.NewDocumentFromResponse(http_response)
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	// now block
 	forecast_now := map[string]interface{}{}
 
 	re_remove_desc := regexp.MustCompile(`^.+\s*:\s*`)
@@ -160,6 +178,7 @@ func get_weather(http_response *http.Response) (map[string]interface{}, []map[st
 		})
 	}
 
+	// forecast for next days block
 	forecast_next := make([]map[string]interface{}, 0, FORECAST_DAYS)
 	for name, selector := range SELECTORS_NEXT_DAYS {
 		doc.Find(selector).Each(func(i int, selection *goquery.Selection) {
@@ -178,112 +197,38 @@ func get_weather(http_response *http.Response) (map[string]interface{}, []map[st
 		forecast_next[i]["term_night"] = convert_str_to_int(forecast_next[i]["term_night"].(string))
 	}
 
-	return forecast_now, forecast_next
-}
-
-//-----------------------------------------------------------------------------
-// get command line parameters
-func get_params() (string, bool, bool) {
-	get_json := false
-	no_color := false
-	flag.BoolVar(&get_json, "json", false, "get JSON")
-	flag.BoolVar(&no_color, "no-color", false, "disable colored output")
-	flag.Usage = func() {
-		fmt.Printf("Usage: %s [options] [city]\noptions:\n", os.Args[0])
-		flag.PrintDefaults()
-		fmt.Printf("\nexamples:\n  %s kiev\n  %s -json london\n", os.Args[0], os.Args[0])
-	}
-	flag.Parse()
-
-	city := ""
-	if flag.NArg() >= 1 {
-		city = flag.Args()[0]
+	// forecast by hours block
+	http_response = get_weather_page(BASE_URL_MINI + cfg.city)
+	doc, err = goquery.NewDocumentFromResponse(http_response)
+	if err != nil {
+		log.Fatal(err)
 	}
 
-	// detect pipe
-	stdout_stat, _ := os.Stdout.Stat()
-	if (stdout_stat.Mode() & os.ModeCharDevice) == 0 {
-		no_color = true
-	}
-
-	return city, get_json, no_color
-}
-
-//-----------------------------------------------------------------------------
-// get max length of string in slice of map of string
-func get_max_length_in_slice(list []map[string]interface{}, key string) int {
-	max_lengh := 0
-	for _, row := range list {
-		length := len([]rune(row[key].(string)))
-		if max_lengh < length {
-			max_lengh = length
-		}
-	}
-
-	return max_lengh
-}
-
-//-----------------------------------------------------------------------------
-// clear all non numeric symbols in string
-func clear_integer_in_string(in string) (out string) {
-	// replace dashes to minus
-	out = regexp.MustCompile(string([]byte{0xE2, 0x88, 0x92})).ReplaceAllString(in, "-")
-
-	// clear non numeric symbols
-	out = regexp.MustCompile(`[^\d-]+`).ReplaceAllString(out, "")
-
-	return out
-}
-
-//-----------------------------------------------------------------------------
-// clear all non print symbols in string
-func clear_nonprint_in_string(in string) (out string) {
-	// replace spaces
-	out = regexp.MustCompile(string([]byte{0xE2, 0x80, 0x89})).ReplaceAllString(in, " ")
-
-	return out
-}
-
-//-----------------------------------------------------------------------------
-// convert "<red>123</> str <green>456</green>" to ansi color string
-// color -- color or simple remove color tags
-func ansi_colour_string(str string, color bool) string {
-	one_color := `(black|red|green|yellow|blue|magenta|cyan|white|\d{1,3})(\+[bBuih]+)?`
-	re := regexp.MustCompile(`<(` + one_color + `(:` + one_color + `)?|/\w*)>`)
-	result := re.ReplaceAllStringFunc(str, func(in string) string {
-		if !color {
-			return ""
-		}
-
-		out := in
-		tag := in[1 : len(in)-1]
-
-		if tag[0] == '/' {
-			out = ansi.ColorCode("reset")
-		} else {
-			out = ansi.ColorCode(tag)
-		}
-
-		return out
+	var forecast_by_hours []HourTemp
+	doc.Find(SELECTOR_BY_HOURS["root"]).Each(func(i int, selection *goquery.Selection) {
+		hour := convert_str_to_int(selection.Find(SELECTOR_BY_HOURS["hour"]).Text())
+		temp := convert_str_to_int(selection.Find(SELECTOR_BY_HOURS["temp"]).Text())
+		icon, _ := selection.Find(SELECTOR_BY_HOURS["icon"]).Attr("class")
+		forecast_by_hours = append(forecast_by_hours, HourTemp{Hour: hour, Temp: temp, Icon: icon})
 	})
 
-	return result
+	return forecast_now, forecast_by_hours, forecast_next
 }
 
 //-----------------------------------------------------------------------------
 // render data as text or JSON
-func render(forecast_now map[string]interface{}, forecast_next []map[string]interface{}, city string, get_json, no_color bool) {
+func render(forecast_now map[string]interface{}, forecast_by_hours []HourTemp, forecast_next []map[string]interface{}, cfg Config) {
 	if _, ok := forecast_now["city"]; ok {
 		// for windows
 		out_writer := (io.Writer)(os.Stdout)
-		if !no_color && runtime.GOOS == "windows" {
+		if !cfg.no_color && runtime.GOOS == "windows" {
 			out_writer = colorable.NewColorableStdout()
 		}
 
-		if !get_json {
-			fmt.Fprintf(out_writer, ansi_colour_string("%s (<yellow>%s</>)\n", !no_color), forecast_now["city"], BASE_URL+city)
+		if !cfg.get_json {
+			fmt.Fprintf(out_writer, ansi_colour_string("%s (<yellow>%s</>)\n", !cfg.no_color), forecast_now["city"], BASE_URL+cfg.city)
 			fmt.Fprintf(out_writer,
-				ansi_colour_string("Сейчас: <green>%d °C</>, <green>%s</>, %s: <green>%d °C</>, %s: <green>%d °C</>\n", !no_color),
+				ansi_colour_string("Сейчас: <green>%d °C</>, <green>%s</>, %s: <green>%d °C</>, %s: <green>%d °C</>\n", !cfg.no_color),
 				forecast_now["term_now"],
 				forecast_now["desc_now"],
 				forecast_now["term_another_name1"],
@@ -291,13 +236,32 @@ func render(forecast_now map[string]interface{}, forecast_next []map[string]inte
 				forecast_now["term_another_name2"],
 				forecast_now["term_another_value2"],
 			)
-			fmt.Fprintf(out_writer, ansi_colour_string("Давление: <green>%s</>\n", !no_color), forecast_now["pressure"])
-			fmt.Fprintf(out_writer, ansi_colour_string("Влажность: <green>%s</>\n", !no_color), forecast_now["humidity"])
-			fmt.Fprintf(out_writer, ansi_colour_string("Ветер: <green>%s</>\n", !no_color), forecast_now["wind"])
+			fmt.Fprintf(out_writer, ansi_colour_string("Давление: <green>%s</>\n", !cfg.no_color), forecast_now["pressure"])
+			fmt.Fprintf(out_writer, ansi_colour_string("Влажность: <green>%s</>\n", !cfg.no_color), forecast_now["humidity"])
+			fmt.Fprintf(out_writer, ansi_colour_string("Ветер: <green>%s</>\n", !cfg.no_color), forecast_now["wind"])
+		}
+
+		if len(forecast_by_hours) > 0 {
+			if cfg.get_json {
+				forecast_now["by_hours"] = forecast_by_hours
+			} else {
+				text_by_hour := [3]string{}
+				for _, item := range forecast_by_hours {
+					text_by_hour[0] += fmt.Sprintf("%3d  ", item.Hour)
+					text_by_hour[1] += fmt.Sprintf("%3d° ", item.Temp)
+					text_by_hour[2] += fmt.Sprintf(ansi_colour_string(" <blue>%3s</blue>  ", !cfg.no_color), ICONS[item.Icon])
+				}
+				fmt.Fprintf(out_writer, strings.Repeat("_", len(forecast_by_hours)*5)+"\n")
+				fmt.Fprintf(out_writer, "%s\n%s\n%s\n",
+					ansi_colour_string("<grey+h>"+text_by_hour[0]+"</>", !cfg.no_color),
+					text_by_hour[1],
+					text_by_hour[2],
+				)
+			}
 		}
 
 		if len(forecast_next) > 0 {
-			if get_json {
+			if cfg.get_json {
 				for _, row := range forecast_next {
 					row["date"] = row["json_date"]
 					delete(row, "json_date")
@@ -307,7 +271,7 @@ func render(forecast_now map[string]interface{}, forecast_next []map[string]inte
 				desc_length := get_max_length_in_slice(forecast_next, "desc")
 				fmt.Fprintf(out_writer, "%s\n", strings.Repeat("─", 27+desc_length))
 				fmt.Fprintf(out_writer,
-					ansi_colour_string("<blue+h> %-10s %4s %-*s %8s</>\n", !no_color),
+					ansi_colour_string("<blue+h> %-10s %4s %-*s %8s</>\n", !cfg.no_color),
 					"дата",
 					"°C",
 					desc_length, "погода",
@@ -317,7 +281,7 @@ func render(forecast_now map[string]interface{}, forecast_next []map[string]inte
 
 				weekend_re := regexp.MustCompile(`(сб|вс)`)
 				for _, row := range forecast_next {
-					date := weekend_re.ReplaceAllString(row["date"].(string), ansi_colour_string("<red+h>$1</>", !no_color))
+					date := weekend_re.ReplaceAllString(row["date"].(string), ansi_colour_string("<red+h>$1</>", !cfg.no_color))
 					fmt.Fprintf(out_writer,
 						" %10s %3d° %-*s %7d°\n",
 						date,
@@ -330,18 +294,18 @@ func render(forecast_now map[string]interface{}, forecast_next []map[string]inte
 			}
 		}
 
-		if get_json {
+		if cfg.get_json {
 			json, _ := json.Marshal(forecast_now)
 			fmt.Println(string(json))
 		}
 	} else {
-		fmt.Printf("City \"%s\" dont found\n", city)
+		fmt.Printf("City \"%s\" dont found\n", cfg.city)
 	}
 }
 
 //-----------------------------------------------------------------------------
 func main() {
-	city, get_json, no_color := get_params()
-	forecast_now, forecast_next := get_weather(get_weather_page(city))
-	render(forecast_now, forecast_next, city, get_json, no_color)
+	cfg := get_params()
+	forecast_now, forecast_by_hours, forecast_next := get_weather(cfg)
+	render(forecast_now, forecast_by_hours, forecast_next, cfg)
 }

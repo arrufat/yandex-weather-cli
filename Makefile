@@ -1,8 +1,8 @@
 build:
-	go build yandex-weather.go
+	go build
 
 run:
-	go run yandex-weather.go
+	go run *.go
 
 VERSION=$$(git tag | head -1)
 build-all-platform:

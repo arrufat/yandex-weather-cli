@@ -83,12 +83,11 @@ func clear_nonprint_in_string(in string) (out string) {
 
 //-----------------------------------------------------------------------------
 // convert "<red>123</> str <green>456</green>" to ansi color string
-// color -- color or simple remove color tags
-func ansi_colour_string(str string, color bool) string {
+func (cfg Config) ansi_colour_string(str string) string {
 	one_color := `(black|red|green|yellow|blue|magenta|cyan|white|grey|\d{1,3})(\+[bBuih]+)?`
 	re := regexp.MustCompile(`<(` + one_color + `(:` + one_color + `)?|/\w*)>`)
 	result := re.ReplaceAllStringFunc(str, func(in string) string {
-		if !color {
+		if cfg.no_color {
 			return ""
 		}
 

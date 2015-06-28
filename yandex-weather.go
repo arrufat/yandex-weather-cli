@@ -226,9 +226,9 @@ func render(forecast_now map[string]interface{}, forecast_by_hours []HourTemp, f
 		}
 
 		if !cfg.get_json {
-			fmt.Fprintf(out_writer, ansi_colour_string("%s (<yellow>%s</>)\n", !cfg.no_color), forecast_now["city"], BASE_URL+cfg.city)
+			fmt.Fprintf(out_writer, cfg.ansi_colour_string("%s (<yellow>%s</>)\n"), forecast_now["city"], BASE_URL+cfg.city)
 			fmt.Fprintf(out_writer,
-				ansi_colour_string("Сейчас: <green>%d °C</>, <green>%s</>, %s: <green>%d °C</>, %s: <green>%d °C</>\n", !cfg.no_color),
+				cfg.ansi_colour_string("Сейчас: <green>%d °C</>, <green>%s</>, %s: <green>%d °C</>, %s: <green>%d °C</>\n"),
 				forecast_now["term_now"],
 				forecast_now["desc_now"],
 				forecast_now["term_another_name1"],
@@ -236,9 +236,9 @@ func render(forecast_now map[string]interface{}, forecast_by_hours []HourTemp, f
 				forecast_now["term_another_name2"],
 				forecast_now["term_another_value2"],
 			)
-			fmt.Fprintf(out_writer, ansi_colour_string("Давление: <green>%s</>\n", !cfg.no_color), forecast_now["pressure"])
-			fmt.Fprintf(out_writer, ansi_colour_string("Влажность: <green>%s</>\n", !cfg.no_color), forecast_now["humidity"])
-			fmt.Fprintf(out_writer, ansi_colour_string("Ветер: <green>%s</>\n", !cfg.no_color), forecast_now["wind"])
+			fmt.Fprintf(out_writer, cfg.ansi_colour_string("Давление: <green>%s</>\n"), forecast_now["pressure"])
+			fmt.Fprintf(out_writer, cfg.ansi_colour_string("Влажность: <green>%s</>\n"), forecast_now["humidity"])
+			fmt.Fprintf(out_writer, cfg.ansi_colour_string("Ветер: <green>%s</>\n"), forecast_now["wind"])
 		}
 
 		if len(forecast_by_hours) > 0 {
@@ -253,11 +253,11 @@ func render(forecast_now map[string]interface{}, forecast_by_hours []HourTemp, f
 					if !exists {
 						icon = " "
 					}
-					text_by_hour[2] += fmt.Sprintf(ansi_colour_string("<blue>%4s</blue> ", !cfg.no_color), icon)
+					text_by_hour[2] += fmt.Sprintf(cfg.ansi_colour_string("<blue>%4s</blue> "), icon)
 				}
 				fmt.Fprintf(out_writer, strings.Repeat("─", len(forecast_by_hours)*5)+"\n")
 				fmt.Fprintf(out_writer, "%s\n%s\n%s\n",
-					ansi_colour_string("<grey+h>"+text_by_hour[0]+"</>", !cfg.no_color),
+					cfg.ansi_colour_string("<grey+h>"+text_by_hour[0]+"</>"),
 					text_by_hour[1],
 					text_by_hour[2],
 				)
@@ -275,7 +275,7 @@ func render(forecast_now map[string]interface{}, forecast_by_hours []HourTemp, f
 				desc_length := get_max_length_in_slice(forecast_next, "desc")
 				fmt.Fprintf(out_writer, "%s\n", strings.Repeat("─", 27+desc_length))
 				fmt.Fprintf(out_writer,
-					ansi_colour_string("<blue+h> %-10s %4s %-*s %8s</>\n", !cfg.no_color),
+					cfg.ansi_colour_string("<blue+h> %-10s %4s %-*s %8s</>\n"),
 					"дата",
 					"°C",
 					desc_length, "погода",
@@ -285,7 +285,7 @@ func render(forecast_now map[string]interface{}, forecast_by_hours []HourTemp, f
 
 				weekend_re := regexp.MustCompile(`(сб|вс)`)
 				for _, row := range forecast_next {
-					date := weekend_re.ReplaceAllString(row["date"].(string), ansi_colour_string("<red+h>$1</>", !cfg.no_color))
+					date := weekend_re.ReplaceAllString(row["date"].(string), cfg.ansi_colour_string("<red+h>$1</>"))
 					fmt.Fprintf(out_writer,
 						" %10s %3d° %-*s %7d°\n",
 						date,

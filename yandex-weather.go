@@ -247,15 +247,15 @@ func render(forecast_now map[string]interface{}, forecast_by_hours []HourTemp, f
 			} else {
 				text_by_hour := [3]string{}
 				for _, item := range forecast_by_hours {
-					text_by_hour[0] += fmt.Sprintf("%4d ", item.Hour)
-					text_by_hour[1] += fmt.Sprintf("%4d°", item.Temp)
+					text_by_hour[0] += fmt.Sprintf("%3d ", item.Hour)
+					text_by_hour[1] += fmt.Sprintf("%3d°", item.Temp)
 					icon, exists := ICONS[item.Icon]
 					if !exists {
 						icon = " "
 					}
-					text_by_hour[2] += fmt.Sprintf(cfg.ansi_colour_string("<blue>%4s</blue> "), icon)
+					text_by_hour[2] += fmt.Sprintf(cfg.ansi_colour_string("<blue>%3s</blue> "), icon)
 				}
-				fmt.Fprintf(out_writer, strings.Repeat("─", len(forecast_by_hours)*5)+"\n")
+				fmt.Fprintf(out_writer, strings.Repeat("─", len(forecast_by_hours)*4)+"\n")
 				fmt.Fprintf(out_writer, "%s\n%s\n%s\n",
 					cfg.ansi_colour_string("<grey+h>"+text_by_hour[0]+"</>"),
 					text_by_hour[1],

@@ -176,6 +176,9 @@ func get_weather(cfg Config) (map[string]interface{}, []HourTemp, []map[string]i
 				forecast_now[name] = convert_str_to_int(forecast_now[name].(string))
 			}
 		})
+		if name == "wind" && forecast_now[name] == nil {
+			forecast_now[name] = "0 м/с"
+		}
 	}
 
 	// forecast for next days block

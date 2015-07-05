@@ -228,7 +228,25 @@ func render(forecast_now map[string]interface{}, forecast_by_hours []HourTemp, f
 			out_writer = colorable.NewColorableStdout()
 		}
 
-		if !cfg.get_json {
+		if cfg.get_json {
+
+			if len(forecast_by_hours) > 0 {
+				forecast_now["by_hours"] = forecast_by_hours
+			}
+
+			if len(forecast_next) > 0 {
+				for _, row := range forecast_next {
+					row["date"] = row["json_date"]
+					delete(row, "json_date")
+				}
+				forecast_now["next_days"] = forecast_next
+			}
+
+			json, _ := json.Marshal(forecast_now)
+			fmt.Println(string(json))
+
+		} else {
+
 			fmt.Fprintf(out_writer, cfg.ansi_colour_string("%s (<yellow>%s</>)\n"), forecast_now["city"], BASE_URL+cfg.city)
 			fmt.Fprintf(out_writer,
 				cfg.ansi_colour_string("Сейчас: <green>%d °C</>, <green>%s</>, %s: <green>%d °C</>, %s: <green>%d °C</>\n"),
@@ -242,12 +260,8 @@ func render(forecast_now map[string]interface{}, forecast_by_hours []HourTemp, f
 			fmt.Fprintf(out_writer, cfg.ansi_colour_string("Давление: <green>%s</>\n"), forecast_now["pressure"])
 			fmt.Fprintf(out_writer, cfg.ansi_colour_string("Влажность: <green>%s</>\n"), forecast_now["humidity"])
 			fmt.Fprintf(out_writer, cfg.ansi_colour_string("Ветер: <green>%s</>\n"), forecast_now["wind"])
-		}
 
-		if len(forecast_by_hours) > 0 {
-			if cfg.get_json {
-				forecast_now["by_hours"] = forecast_by_hours
-			} else {
+			if len(forecast_by_hours) > 0 {
 				text_by_hour := [3]string{}
 				for _, item := range forecast_by_hours {
 					text_by_hour[0] += fmt.Sprintf("%3d ", item.Hour)
@@ -265,16 +279,8 @@ func render(forecast_now map[string]interface{}, forecast_by_hours []HourTemp, f
 					text_by_hour[2],
 				)
 			}
-		}
 
-		if len(forecast_next) > 0 {
-			if cfg.get_json {
-				for _, row := range forecast_next {
-					row["date"] = row["json_date"]
-					delete(row, "json_date")
-				}
-				forecast_now["next_days"] = forecast_next
-			} else {
+			if len(forecast_next) > 0 {
 				desc_length := get_max_length_in_slice(forecast_next, "desc")
 				fmt.Fprintf(out_writer, "%s\n", strings.Repeat("─", 27+desc_length))
 				fmt.Fprintf(out_writer,
@@ -301,10 +307,6 @@ func render(forecast_now map[string]interface{}, forecast_by_hours []HourTemp, f
 			}
 		}
 
-		if cfg.get_json {
-			json, _ := json.Marshal(forecast_now)
-			fmt.Println(string(json))
-		}
 	} else {
 		fmt.Printf("City \"%s\" dont found\n", cfg.city)
 	}

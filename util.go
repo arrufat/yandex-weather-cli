@@ -3,10 +3,13 @@ package main
 import (
 	"regexp"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/mgutz/ansi"
 )
+
+var HISTO_CHARS = [...]string{"▁", "▂", "▃", "▄", "▅", "▆", "▇", "█"}
 
 //-----------------------------------------------------------------------------
 // suggest date from one day, returns human date and json date
@@ -102,6 +105,30 @@ func (cfg Config) ansi_colour_string(str string) string {
 
 		return out
 	})
+
+	return result
+}
+
+// ----------------------------------------------------------------------------
+// Render histogram for forecast by hours
+func render_histo(forecast_by_hours []HourTemp) string {
+	min_temp, max_temp := forecast_by_hours[0].Temp, forecast_by_hours[0].Temp
+	result := ""
+
+	for _, row := range forecast_by_hours {
+		if min_temp > row.Temp {
+			min_temp = row.Temp
+		}
+		if max_temp < row.Temp {
+			max_temp = row.Temp
+		}
+	}
+
+	max_gradation := len(HISTO_CHARS) - 1
+	for _, row := range forecast_by_hours {
+		reduce_value := int(float64(row.Temp-min_temp) / float64(max_temp-min_temp) * float64(max_gradation))
+		result = result + strings.Repeat(HISTO_CHARS[reduce_value], 4)
+	}
 
 	return result
 }

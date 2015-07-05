@@ -262,21 +262,24 @@ func render(forecast_now map[string]interface{}, forecast_by_hours []HourTemp, f
 			fmt.Fprintf(out_writer, cfg.ansi_colour_string("Ветер: <green>%s</>\n"), forecast_now["wind"])
 
 			if len(forecast_by_hours) > 0 {
-				text_by_hour := [3]string{}
+				text_by_hour := [4]string{}
 				for _, item := range forecast_by_hours {
 					text_by_hour[0] += fmt.Sprintf("%3d ", item.Hour)
-					text_by_hour[1] += fmt.Sprintf("%3d°", item.Temp)
+					text_by_hour[2] += fmt.Sprintf("%3d°", item.Temp)
 					icon, exists := ICONS[item.Icon]
 					if !exists {
 						icon = " "
 					}
-					text_by_hour[2] += fmt.Sprintf(cfg.ansi_colour_string("<blue>%3s</blue> "), icon)
+					text_by_hour[3] += fmt.Sprintf(cfg.ansi_colour_string("<blue>%3s</blue> "), icon)
 				}
+				text_by_hour[1] = cfg.ansi_colour_string("<grey+h>" + render_histo(forecast_by_hours) + "</>")
+
 				fmt.Fprintf(out_writer, strings.Repeat("─", len(forecast_by_hours)*4)+"\n")
-				fmt.Fprintf(out_writer, "%s\n%s\n%s\n",
+				fmt.Fprintf(out_writer, "%s\n%s\n%s\n%s\n",
 					cfg.ansi_colour_string("<grey+h>"+text_by_hour[0]+"</>"),
 					text_by_hour[1],
 					text_by_hour[2],
+					text_by_hour[3],
 				)
 			}
 

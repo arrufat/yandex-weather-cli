@@ -39,6 +39,7 @@ type Config struct {
 	city     string
 	get_json bool
 	no_color bool
+	no_today bool
 }
 
 // HourTemp - one hour temperature
@@ -101,6 +102,7 @@ var ICONS = map[string]string{
 func get_params() (cfg Config) {
 	flag.BoolVar(&cfg.get_json, "json", false, "get JSON")
 	flag.BoolVar(&cfg.no_color, "no-color", false, "disable colored output")
+	flag.BoolVar(&cfg.no_today, "no-today", false, "disable today forecast")
 	flag.Usage = func() {
 		fmt.Printf("Usage: %s [options] [city]\noptions:\n", os.Args[0])
 		flag.PrintDefaults()
@@ -201,19 +203,21 @@ func get_weather(cfg Config) (map[string]interface{}, []HourTemp, []map[string]i
 	}
 
 	// forecast by hours block
-	http_response = get_weather_page(BASE_URL_MINI + cfg.city)
-	doc, err = goquery.NewDocumentFromResponse(http_response)
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	var forecast_by_hours []HourTemp
-	doc.Find(SELECTOR_BY_HOURS["root"]).Each(func(i int, selection *goquery.Selection) {
-		hour := convert_str_to_int(selection.Find(SELECTOR_BY_HOURS["hour"]).Text())
-		temp := convert_str_to_int(selection.Find(SELECTOR_BY_HOURS["temp"]).Text())
-		icon, _ := selection.Find(SELECTOR_BY_HOURS["icon"]).Attr("class")
-		forecast_by_hours = append(forecast_by_hours, HourTemp{Hour: hour, Temp: temp, Icon: icon})
-	})
+	if !cfg.no_today {
+		http_response = get_weather_page(BASE_URL_MINI + cfg.city)
+		doc, err = goquery.NewDocumentFromResponse(http_response)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		doc.Find(SELECTOR_BY_HOURS["root"]).Each(func(i int, selection *goquery.Selection) {
+			hour := convert_str_to_int(selection.Find(SELECTOR_BY_HOURS["hour"]).Text())
+			temp := convert_str_to_int(selection.Find(SELECTOR_BY_HOURS["temp"]).Text())
+			icon, _ := selection.Find(SELECTOR_BY_HOURS["icon"]).Attr("class")
+			forecast_by_hours = append(forecast_by_hours, HourTemp{Hour: hour, Temp: temp, Icon: icon})
+		})
+	}
 
 	return forecast_now, forecast_by_hours, forecast_next
 }
@@ -230,7 +234,7 @@ func render(forecast_now map[string]interface{}, forecast_by_hours []HourTemp, f
 
 		if cfg.get_json {
 
-			if len(forecast_by_hours) > 0 {
+			if !cfg.no_today && len(forecast_by_hours) > 0 {
 				forecast_now["by_hours"] = forecast_by_hours
 			}
 
@@ -261,7 +265,7 @@ func render(forecast_now map[string]interface{}, forecast_by_hours []HourTemp, f
 			fmt.Fprintf(out_writer, cfg.ansi_colour_string("Влажность: <green>%s</>\n"), forecast_now["humidity"])
 			fmt.Fprintf(out_writer, cfg.ansi_colour_string("Ветер: <green>%s</>\n"), forecast_now["wind"])
 
-			if len(forecast_by_hours) > 0 {
+			if !cfg.no_today && len(forecast_by_hours) > 0 {
 				text_by_hour := [4]string{}
 				for _, item := range forecast_by_hours {
 					text_by_hour[0] += fmt.Sprintf("%3d ", item.Hour)

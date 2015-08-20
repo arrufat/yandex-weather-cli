@@ -14,12 +14,14 @@ From source:
 Usage
 -----
 
-    # weather in current location
-    yandex-weather-cli
+    # weather client by default use your current location
+    yandex-weather-cli [options] [city]
 
     # options
-    yandex-weather-cli -help
-    yandex-weather-cli -no-color
+        -json     : JSON out
+        -no-color : no coloring
+        -no-today : skip today forecast
+        -help
 
     # in another city
     yandex-weather-cli kiev

@@ -21,17 +21,14 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
 	"net/http/cookiejar"
 	"os"
 	"regexp"
-	"runtime"
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
-	"github.com/mattn/go-colorable"
 )
 
 // Config - application config
@@ -222,11 +219,7 @@ func get_weather(cfg Config) (map[string]interface{}, []HourTemp, []map[string]i
 // render data as text or JSON
 func render(forecast_now map[string]interface{}, forecast_by_hours []HourTemp, forecast_next []map[string]interface{}, cfg Config) {
 	if _, ok := forecast_now["city"]; ok {
-		// for windows
-		out_writer := (io.Writer)(os.Stdout)
-		if !cfg.no_color && runtime.GOOS == "windows" {
-			out_writer = colorable.NewColorableStdout()
-		}
+		out_writer := get_color_writer(cfg.no_color)
 
 		if cfg.get_json {
 

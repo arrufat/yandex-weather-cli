@@ -4,9 +4,16 @@ Command line interface for Yandex weather service
 Install
 -------------------
 
-Download binaries from: [releases](https://github.com/msoap/yandex-weather-cli/releases) (OS X/Linux/Windows/RaspberryPi)
+MacOS via homebrew:
 
-From source:
+    brew tap msoap/tools
+    brew install yandex-weather-cli
+    # update:
+    brew update; brew upgrade yandex-weather-cli
+
+Or download binaries from: [releases](https://github.com/msoap/yandex-weather-cli/releases) (OS X/Linux/Windows/RaspberryPi)
+
+Or build from source:
 
     go get -u github.com/msoap/yandex-weather-cli
     ln -s $GOPATH/bin/yandex-weather-cli ~/bin/

@@ -2,7 +2,7 @@ build:
 	go build
 
 run:
-	go run *.go
+	go run yandex-weather.go util.go terminal_$$(go env GOOS).go
 
 VERSION=$$(git tag | head -1)
 build-all-platform:
@@ -22,7 +22,7 @@ build-all-platform:
 			fi \
 		done \
 	done
-	GOOS=linux GOARCH=arm go build
+	GOOS=linux GOARCH=arm GOARM=6 go build
 	@zip -9 yandex-weather-cli-$(VERSION).arm.linux.zip yandex-weather-cli README.md LICENSE
 	@rm yandex-weather-cli
 

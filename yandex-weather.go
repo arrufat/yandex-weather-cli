@@ -52,7 +52,7 @@ const (
 	// BASE_URL_MINI - url for forecast by hours (testing: "http://localhost:8080/get?url=https://p.ya.ru/")
 	BASE_URL_MINI = "https://p.ya.ru/"
 	// USER_AGENT - for http.request
-	USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/600.1.25 (KHTML, like Gecko) Version/8.0 Safari/600.1.25"
+	USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11) AppleWebKit/601.1.56 (KHTML, like Gecko) Version/9.0 Safari/601.1.56"
 	// FORECAST_DAYS - parse days in forecast
 	FORECAST_DAYS = 10
 )

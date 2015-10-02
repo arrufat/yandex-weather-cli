@@ -91,3 +91,34 @@ func Test_parse_icon(t *testing.T) {
 		}
 	}
 }
+
+func Test_get_max_length_in_slice(t *testing.T) {
+	test_data := []struct {
+		list []map[string]interface{}
+		key  string
+		out  int
+	}{
+		{
+			[]map[string]interface{}{
+				{"k1": "aaa"},
+				{"k1": "aaaa"},
+			},
+			"k1",
+			4,
+		}, {
+			[]map[string]interface{}{
+				{"k1": "снег", "k2": "снегопад"},
+				{"k1": "дождь"},
+			},
+			"k1",
+			5,
+		},
+	}
+
+	for _, item := range test_data {
+		out := get_max_length_in_slice(item.list, item.key)
+		if out != item.out {
+			t.Errorf("expected: %#v, real: %#v", item.out, out)
+		}
+	}
+}

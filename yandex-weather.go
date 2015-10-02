@@ -81,15 +81,14 @@ var SELECTORS_NEXT_DAYS = map[string]string{
 
 // SELECTORS_BY_HOURS - get forecast by hours
 var SELECTOR_BY_HOURS = map[string]string{
-	"root": "div.temperatures div.chart_wrapper",
-	"hour": "p.th",
-	"temp": "span.chart_temperature",
-	"icon": "span:nth-child(3)",
+	"root": "div.temp-chart__wrap",
+	"hour": "p.temp-chart__hour",
+	"temp": "div.temp-chart__temp",
+	"icon": "i.icon",
 }
 
 // ICONS - unicode symbols for icon names
 var ICONS = map[string]string{
-	"fake_icon": " ",
 	"icon_snow": "✻",
 	"icon_rain": "☂",
 }
@@ -212,11 +211,23 @@ func get_weather(cfg Config) (map[string]interface{}, []HourTemp, []map[string]i
 			hour := convert_str_to_int(selection.Find(SELECTOR_BY_HOURS["hour"]).Text())
 			temp := convert_str_to_int(selection.Find(SELECTOR_BY_HOURS["temp"]).Text())
 			icon, _ := selection.Find(SELECTOR_BY_HOURS["icon"]).Attr("class")
-			forecast_by_hours = append(forecast_by_hours, HourTemp{Hour: hour, Temp: temp, Icon: icon})
+			forecast_by_hours = append(forecast_by_hours, HourTemp{Hour: hour, Temp: temp, Icon: parse_icon(icon)})
 		})
 	}
 
 	return forecast_now, forecast_by_hours, forecast_next
+}
+
+//-----------------------------------------------------------------------------
+// get icon name from css class attribut
+func parse_icon(css_class string) string {
+	all_attributes := regexp.MustCompile(`\s+`).Split(css_class, -1)
+	for _, attr := range all_attributes {
+		if _, ok := ICONS[attr]; ok {
+			return attr
+		}
+	}
+	return ""
 }
 
 //-----------------------------------------------------------------------------

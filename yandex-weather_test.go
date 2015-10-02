@@ -63,3 +63,31 @@ func Test_convert_str_to_int(t *testing.T) {
 		}
 	}
 }
+
+func Test_parse_icon(t *testing.T) {
+	test_data := []struct {
+		in  string
+		out string
+	}{
+		{
+			"",
+			"",
+		}, {
+			"icon",
+			"",
+		}, {
+			"icon icon_size_24 icon_snow",
+			"icon_snow",
+		}, {
+			"icon icon_size_24 icon_rain",
+			"icon_rain",
+		},
+	}
+
+	for _, item := range test_data {
+		out := parse_icon(item.in)
+		if out != item.out {
+			t.Errorf("expected: %#v, real: %#v", item.out, out)
+		}
+	}
+}

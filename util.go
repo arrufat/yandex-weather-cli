@@ -3,7 +3,6 @@ package main
 import (
 	"regexp"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/mgutz/ansi"
@@ -112,22 +111,42 @@ func (cfg Config) ansi_colour_string(str string) string {
 // ----------------------------------------------------------------------------
 // Render histogram for forecast by hours
 func render_histo(forecast_by_hours []HourTemp) string {
-	min_temp, max_temp := forecast_by_hours[0].Temp, forecast_by_hours[0].Temp
-	result := ""
+	// linear interpolation (* 4)
+	interpolation_fact := 4
+	temperatures := make([]float64, len(forecast_by_hours)*interpolation_fact)
+	for i, row := range forecast_by_hours {
 
-	for _, row := range forecast_by_hours {
-		if min_temp > row.Temp {
-			min_temp = row.Temp
+		curr_temp := float64(row.Temp)
+		next_i := i + 1
+		if i == len(forecast_by_hours)-1 {
+			next_i = i
 		}
-		if max_temp < row.Temp {
-			max_temp = row.Temp
+		next_temp := float64(forecast_by_hours[next_i].Temp)
+
+		temperatures[i*interpolation_fact] = curr_temp
+
+		for j := 1; j < interpolation_fact; j++ {
+			temperatures[i*interpolation_fact+j] = curr_temp +
+				(float64(j)/float64(interpolation_fact))*((next_temp-curr_temp)/1)
 		}
 	}
 
-	max_gradation := len(HISTO_CHARS) - 1
-	for _, row := range forecast_by_hours {
-		reduce_value := int(float64(row.Temp-min_temp) / float64(max_temp-min_temp) * float64(max_gradation))
-		result = result + strings.Repeat(HISTO_CHARS[reduce_value], 4)
+	min_temp, max_temp := temperatures[0], temperatures[0]
+	result := ""
+
+	for _, temp := range temperatures {
+		if min_temp > temp {
+			min_temp = temp
+		}
+		if max_temp < temp {
+			max_temp = temp
+		}
+	}
+
+	max_gradation := float64(len(HISTO_CHARS) - 1)
+	for _, temp := range temperatures {
+		reduce_value := int((temp - min_temp) / (max_temp - min_temp) * max_gradation)
+		result = result + HISTO_CHARS[reduce_value]
 	}
 
 	return result

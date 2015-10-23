@@ -10,7 +10,6 @@ import (
 func get_color_writer(no_color bool) io.Writer {
 	if no_color {
 		return (io.Writer)(os.Stdout)
-	} else {
-		return colorable.NewColorableStdout()
 	}
+	return colorable.NewColorableStdout()
 }

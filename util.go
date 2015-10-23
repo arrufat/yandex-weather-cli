@@ -8,6 +8,7 @@ import (
 	"github.com/mgutz/ansi"
 )
 
+// HISTO_CHARS - chars for draw histogram
 var HISTO_CHARS = [...]string{"▁", "▂", "▃", "▄", "▅", "▆", "▇", "█"}
 
 //-----------------------------------------------------------------------------

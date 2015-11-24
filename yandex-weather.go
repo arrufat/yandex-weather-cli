@@ -79,7 +79,7 @@ var SELECTORS_NEXT_DAYS = map[string]string{
 	"term_night": "div.tabs-panes div.forecast-brief__item-temp-night",
 }
 
-// SELECTORS_BY_HOURS - get forecast by hours
+// SELECTOR_BY_HOURS - get forecast by hours
 var SELECTOR_BY_HOURS = map[string]string{
 	"root": "div.temp-chart__wrap",
 	"hour": "p.temp-chart__hour",

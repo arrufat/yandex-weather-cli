@@ -145,14 +145,12 @@ func render_histo(forecast_by_hours []HourTemp) string {
 	}
 
 	max_gradation := float64(len(HISTO_CHARS) - 1)
+	if max_temp-min_temp < max_gradation/2 {
+		// if difference between max and min is too small
+		max_temp = min_temp + max_gradation/2
+	}
 	for _, temp := range temperatures {
-		reduce_value := 0
-		if max_temp == min_temp {
-			// same temperature for all period
-			reduce_value = int(max_gradation / 2)
-		} else {
-			reduce_value = int((temp - min_temp) / (max_temp - min_temp) * max_gradation)
-		}
+		reduce_value := int((temp - min_temp) / (max_temp - min_temp) * max_gradation)
 		result = result + HISTO_CHARS[reduce_value]
 	}
 

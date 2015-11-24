@@ -2,7 +2,7 @@ build:
 	go build
 
 run:
-	go run yandex-weather.go util.go terminal_$$(go env GOOS).go
+	go run yandex-weather.go terminal_unix.go util.go
 
 VERSION=$$(git tag | head -1)
 build-all-platform:

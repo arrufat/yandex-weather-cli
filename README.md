@@ -39,7 +39,7 @@ Usage
 
 Screenshot
 ----------
-<img src="https://raw.githubusercontent.com/msoap/yandex-weather-cli/misc/img/yandex-weather.go.2015-10-02.0.screenshot.png" align="center" alt="Screenshot" height="439" width="604">
+<img src="https://raw.githubusercontent.com/msoap/yandex-weather-cli/misc/img/yandex-weather.go.2015-12-28.0.screenshot.png" align="center" alt="Screenshot" height="539" width="764">
 
 See also
 --------

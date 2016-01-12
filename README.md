@@ -1,6 +1,8 @@
 Command line interface for Yandex weather service
 =================================================
 
+[![Build Status](https://travis-ci.org/msoap/yandex-weather-cli.svg?branch=master)](https://travis-ci.org/msoap/yandex-weather-cli)
+
 Install
 -------------------
 

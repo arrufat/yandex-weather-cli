@@ -2,6 +2,7 @@ Command line interface for Yandex weather service
 =================================================
 
 [![Build Status](https://travis-ci.org/msoap/yandex-weather-cli.svg?branch=master)](https://travis-ci.org/msoap/yandex-weather-cli)
+[![Report Card](http://goreportcard.com/badge/msoap/yandex-weather-cli)](http://goreportcard.com/report/msoap/yandex-weather-cli)
 
 Install
 -------------------

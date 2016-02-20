@@ -3,6 +3,8 @@ Command line interface for Yandex weather service
 
 [![Build Status](https://travis-ci.org/msoap/yandex-weather-cli.svg?branch=master)](https://travis-ci.org/msoap/yandex-weather-cli)
 [![Coverage Status](https://coveralls.io/repos/github/msoap/yandex-weather-cli/badge.svg?branch=master)](https://coveralls.io/github/msoap/yandex-weather-cli?branch=master)
+[![Github All Releases](https://img.shields.io/github/downloads/msoap/yandex-weather-cli/total.svg)](https://github.com/msoap/yandex-weather-cli/releases/latest)
+[![Homebrew formula exists](https://img.shields.io/badge/homebrew-🍺-d7af72.svg)](https://github.com/msoap/yandex-weather-cli#install)
 [![Report Card](https://goreportcard.com/badge/github.com/msoap/yandex-weather-cli)](https://goreportcard.com/report/github.com/msoap/yandex-weather-cli)
 
 Install

@@ -26,6 +26,7 @@ import (
 	"net/http/cookiejar"
 	"os"
 	"regexp"
+	"runtime"
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
@@ -112,9 +113,11 @@ func get_params() (cfg Config) {
 	}
 
 	// detect pipe
-	stdout_stat, _ := os.Stdout.Stat()
-	if (stdout_stat.Mode() & os.ModeCharDevice) == 0 {
-		cfg.no_color = true
+	if runtime.GOOS != "windows" {
+		stdout_stat, _ := os.Stdout.Stat()
+		if (stdout_stat.Mode() & os.ModeCharDevice) == 0 {
+			cfg.no_color = true
+		}
 	}
 
 	return cfg

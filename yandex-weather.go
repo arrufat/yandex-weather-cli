@@ -112,8 +112,11 @@ func get_params() (cfg Config) {
 		cfg.city = flag.Args()[0]
 	}
 
-	// detect pipe
-	if runtime.GOOS != "windows" {
+	if runtime.GOOS == "windows" {
+		// broken unicode symbols in cmd.exe and dont detect pipe
+		cfg.no_today = true
+	} else {
+		// detect pipe
 		stdout_stat, _ := os.Stdout.Stat()
 		if (stdout_stat.Mode() & os.ModeCharDevice) == 0 {
 			cfg.no_color = true

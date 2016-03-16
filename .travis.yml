@@ -1,6 +1,5 @@
 language: go
 sudo: false
-cache: false
 
 go:
   - 1.5.3

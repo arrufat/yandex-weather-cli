@@ -1,3 +1,4 @@
+// utility functions
 package main
 
 import (
@@ -8,7 +9,7 @@ import (
 	"github.com/mgutz/ansi"
 )
 
-// HISTO_CHARS - chars for draw histogram
+// HistoChars - chars for draw histogram
 var HistoChars = [...]string{"▁", "▂", "▃", "▄", "▅", "▆", "▇", "█"}
 
 //-----------------------------------------------------------------------------

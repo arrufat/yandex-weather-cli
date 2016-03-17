@@ -1,5 +1,6 @@
 // +build !windows
 
+// getColorWriter() for POSIX os-es
 package main
 
 import (

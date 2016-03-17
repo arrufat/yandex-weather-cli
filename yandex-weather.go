@@ -48,18 +48,18 @@ type HourTemp struct {
 }
 
 const (
-	// BASE_URL - yandex pogoda service url (testing: "http://localhost:8080/get?url=https://pogoda.yandex.ru/")
+	// BaseURL - yandex pogoda service url (testing: "http://localhost:8080/get?url=https://pogoda.yandex.ru/")
 	BaseURL = "https://pogoda.yandex.ru/"
-	// BASE_URL_MINI - url for forecast by hours (testing: "http://localhost:8080/get?url=https://p.ya.ru/")
+	// BaseURLMini - url for forecast by hours (testing: "http://localhost:8080/get?url=https://p.ya.ru/")
 	BaseURLMini = "https://p.ya.ru/"
-	// USER_AGENT - for http.request
+	// UserAgent - for http.request
 	UserAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11) AppleWebKit/601.1.56 (KHTML, like Gecko) Version/9.0 Safari/601.1.56"
-	// FORECAST_DAYS - parse days in forecast
+	// ForecastDays - parse days in forecast
 	ForecastDays = 10
 )
 
-// SELECTORS - css selectors for forecast today
-var SELECTORS = map[string]string{
+// Selectors - css selectors for forecast today
+var Selectors = map[string]string{
 	"city":                "div.navigation-city h1",
 	"term_now":            "div.current-weather div.current-weather__thermometer_type_now",
 	"term_another_name1":  "span.current-weather__col:nth-child(3) span.current-weather__thermometer-name",
@@ -72,7 +72,7 @@ var SELECTORS = map[string]string{
 	"pressure":            "div.current-weather div.current-weather__info-row:nth-child(4)",
 }
 
-// SELECTORS_NEXT_DAYS - css selectors for forecast next days
+// SelectorsNextDays - css selectors for forecast next days
 var SelectorsNextDays = map[string]string{
 	"date":       "div.tabs-panes span.forecast-brief__item-day",
 	"desc":       "div.tabs-panes div.forecast-brief__item-comment",
@@ -80,7 +80,7 @@ var SelectorsNextDays = map[string]string{
 	"term_night": "div.tabs-panes div.forecast-brief__item-temp-night",
 }
 
-// SELECTOR_BY_HOURS - get forecast by hours
+// SelectorByHours - get forecast by hours
 var SelectorByHours = map[string]string{
 	"root": "div.temp-chart__wrap",
 	"hour": "p.temp-chart__hour",
@@ -170,7 +170,7 @@ func getWeather(cfg Config) (map[string]interface{}, []HourTemp, []map[string]in
 	forecastNow := map[string]interface{}{}
 
 	reRemoveDesc := regexp.MustCompile(`^.+\s*:\s*`)
-	for name, selector := range SELECTORS {
+	for name, selector := range Selectors {
 		doc.Find(selector).Each(func(i int, selection *goquery.Selection) {
 			forecastNow[name] = clearNonprintInString(selection.Text())
 			switch name {

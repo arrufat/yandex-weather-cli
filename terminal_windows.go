@@ -1,3 +1,4 @@
+// getColorWriter() for Windows
 package main
 
 import (

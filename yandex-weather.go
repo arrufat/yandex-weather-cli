@@ -34,10 +34,10 @@ import (
 
 // Config - application config
 type Config struct {
-	city     string
-	get_json bool
-	no_color bool
-	no_today bool
+	city    string
+	getJSON bool
+	noColor bool
+	noToday bool
 }
 
 // HourTemp - one hour temperature
@@ -49,13 +49,13 @@ type HourTemp struct {
 
 const (
 	// BASE_URL - yandex pogoda service url (testing: "http://localhost:8080/get?url=https://pogoda.yandex.ru/")
-	BASE_URL = "https://pogoda.yandex.ru/"
+	BaseURL = "https://pogoda.yandex.ru/"
 	// BASE_URL_MINI - url for forecast by hours (testing: "http://localhost:8080/get?url=https://p.ya.ru/")
-	BASE_URL_MINI = "https://p.ya.ru/"
+	BaseURLMini = "https://p.ya.ru/"
 	// USER_AGENT - for http.request
-	USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11) AppleWebKit/601.1.56 (KHTML, like Gecko) Version/9.0 Safari/601.1.56"
+	UserAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11) AppleWebKit/601.1.56 (KHTML, like Gecko) Version/9.0 Safari/601.1.56"
 	// FORECAST_DAYS - parse days in forecast
-	FORECAST_DAYS = 10
+	ForecastDays = 10
 )
 
 // SELECTORS - css selectors for forecast today
@@ -73,7 +73,7 @@ var SELECTORS = map[string]string{
 }
 
 // SELECTORS_NEXT_DAYS - css selectors for forecast next days
-var SELECTORS_NEXT_DAYS = map[string]string{
+var SelectorsNextDays = map[string]string{
 	"date":       "div.tabs-panes span.forecast-brief__item-day",
 	"desc":       "div.tabs-panes div.forecast-brief__item-comment",
 	"term":       "div.tabs-panes div.forecast-brief__item-temp-day",
@@ -81,7 +81,7 @@ var SELECTORS_NEXT_DAYS = map[string]string{
 }
 
 // SELECTOR_BY_HOURS - get forecast by hours
-var SELECTOR_BY_HOURS = map[string]string{
+var SelectorByHours = map[string]string{
 	"root": "div.temp-chart__wrap",
 	"hour": "p.temp-chart__hour",
 	"temp": "div.temp-chart__temp",
@@ -96,10 +96,10 @@ var ICONS = map[string]string{
 
 //-----------------------------------------------------------------------------
 // get command line parameters
-func get_params() (cfg Config) {
-	flag.BoolVar(&cfg.get_json, "json", false, "get JSON")
-	flag.BoolVar(&cfg.no_color, "no-color", false, "disable colored output")
-	flag.BoolVar(&cfg.no_today, "no-today", false, "disable today forecast")
+func getParams() (cfg Config) {
+	flag.BoolVar(&cfg.getJSON, "json", false, "get JSON")
+	flag.BoolVar(&cfg.noColor, "no-color", false, "disable colored output")
+	flag.BoolVar(&cfg.noToday, "no-today", false, "disable today forecast")
 	flag.Usage = func() {
 		fmt.Printf("Usage: %s [options] [city]\noptions:\n", os.Args[0])
 		flag.PrintDefaults()
@@ -114,12 +114,12 @@ func get_params() (cfg Config) {
 
 	if runtime.GOOS == "windows" {
 		// broken unicode symbols in cmd.exe and dont detect pipe
-		cfg.no_today = true
+		cfg.noToday = true
 	} else {
 		// detect pipe
-		stdout_stat, _ := os.Stdout.Stat()
-		if (stdout_stat.Mode() & os.ModeCharDevice) == 0 {
-			cfg.no_color = true
+		stdoutStat, _ := os.Stdout.Stat()
+		if (stdoutStat.Mode() & os.ModeCharDevice) == 0 {
+			cfg.noColor = true
 		}
 	}
 
@@ -128,18 +128,18 @@ func get_params() (cfg Config) {
 
 //-----------------------------------------------------------------------------
 // get weather html page as http.Response
-func get_weather_page(weather_url string) *http.Response {
+func getWeatherPage(weatherURL string) *http.Response {
 	cookie, _ := cookiejar.New(nil)
 	client := &http.Client{
 		Jar: cookie,
 	}
 
-	request, err := http.NewRequest("GET", weather_url, nil)
+	request, err := http.NewRequest("GET", weatherURL, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	request.Header.Set("User-Agent", USER_AGENT)
+	request.Header.Set("User-Agent", UserAgent)
 
 	// create request for set cookies only
 	response, err := client.Do(request)
@@ -147,7 +147,7 @@ func get_weather_page(weather_url string) *http.Response {
 		log.Fatal(err)
 	}
 
-	response, err = client.Get(weather_url)
+	response, err = client.Get(weatherURL)
 
 	if err != nil {
 		log.Fatal(err)
@@ -158,77 +158,77 @@ func get_weather_page(weather_url string) *http.Response {
 
 //-----------------------------------------------------------------------------
 // parse html via goquery, find DOM-nodes with weather forecast data
-func get_weather(cfg Config) (map[string]interface{}, []HourTemp, []map[string]interface{}) {
-	http_response := get_weather_page(BASE_URL + cfg.city)
+func getWeather(cfg Config) (map[string]interface{}, []HourTemp, []map[string]interface{}) {
+	httpResponse := getWeatherPage(BaseURL + cfg.city)
 
-	doc, err := goquery.NewDocumentFromResponse(http_response)
+	doc, err := goquery.NewDocumentFromResponse(httpResponse)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	// now block
-	forecast_now := map[string]interface{}{}
+	forecastNow := map[string]interface{}{}
 
-	re_remove_desc := regexp.MustCompile(`^.+\s*:\s*`)
+	reRemoveDesc := regexp.MustCompile(`^.+\s*:\s*`)
 	for name, selector := range SELECTORS {
 		doc.Find(selector).Each(func(i int, selection *goquery.Selection) {
-			forecast_now[name] = clear_nonprint_in_string(selection.Text())
+			forecastNow[name] = clearNonprintInString(selection.Text())
 			switch name {
 			case "humidity", "pressure", "wind":
-				forecast_now[name] = re_remove_desc.ReplaceAllString(forecast_now[name].(string), "")
+				forecastNow[name] = reRemoveDesc.ReplaceAllString(forecastNow[name].(string), "")
 			case "term_now", "term_another_value1", "term_another_value2":
-				forecast_now[name] = convert_str_to_int(forecast_now[name].(string))
+				forecastNow[name] = convertStrToInt(forecastNow[name].(string))
 			}
 		})
-		if name == "wind" && forecast_now[name] == nil {
-			forecast_now[name] = "0 м/с"
+		if name == "wind" && forecastNow[name] == nil {
+			forecastNow[name] = "0 м/с"
 		}
 	}
 
 	// forecast for next days block
-	forecast_next := make([]map[string]interface{}, 0, FORECAST_DAYS)
-	for name, selector := range SELECTORS_NEXT_DAYS {
+	forecastNext := make([]map[string]interface{}, 0, ForecastDays)
+	for name, selector := range SelectorsNextDays {
 		doc.Find(selector).Each(func(i int, selection *goquery.Selection) {
-			if len(forecast_next)-1 < i {
-				forecast_next = append(forecast_next, map[string]interface{}{})
+			if len(forecastNext)-1 < i {
+				forecastNext = append(forecastNext, map[string]interface{}{})
 			}
 
-			forecast_next[i][name] = clear_nonprint_in_string(selection.Text())
+			forecastNext[i][name] = clearNonprintInString(selection.Text())
 		})
 	}
 
 	// suggest dates
-	for i := range forecast_next {
-		forecast_next[i]["date"], forecast_next[i]["json_date"] = suggest_date(forecast_next[i]["date"].(string), i)
-		forecast_next[i]["term"] = convert_str_to_int(forecast_next[i]["term"].(string))
-		forecast_next[i]["term_night"] = convert_str_to_int(forecast_next[i]["term_night"].(string))
+	for i := range forecastNext {
+		forecastNext[i]["date"], forecastNext[i]["json_date"] = suggestDate(forecastNext[i]["date"].(string), i)
+		forecastNext[i]["term"] = convertStrToInt(forecastNext[i]["term"].(string))
+		forecastNext[i]["term_night"] = convertStrToInt(forecastNext[i]["term_night"].(string))
 	}
 
 	// forecast by hours block
-	var forecast_by_hours []HourTemp
-	if !cfg.no_today {
-		http_response = get_weather_page(BASE_URL_MINI + cfg.city)
-		doc, err = goquery.NewDocumentFromResponse(http_response)
+	var forecastByHours []HourTemp
+	if !cfg.noToday {
+		httpResponse = getWeatherPage(BaseURLMini + cfg.city)
+		doc, err = goquery.NewDocumentFromResponse(httpResponse)
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		doc.Find(SELECTOR_BY_HOURS["root"]).Each(func(i int, selection *goquery.Selection) {
-			hour := convert_str_to_int(selection.Find(SELECTOR_BY_HOURS["hour"]).Text())
-			temp := convert_str_to_int(selection.Find(SELECTOR_BY_HOURS["temp"]).Text())
-			icon, _ := selection.Find(SELECTOR_BY_HOURS["icon"]).Attr("class")
-			forecast_by_hours = append(forecast_by_hours, HourTemp{Hour: hour, Temp: temp, Icon: parse_icon(icon)})
+		doc.Find(SelectorByHours["root"]).Each(func(i int, selection *goquery.Selection) {
+			hour := convertStrToInt(selection.Find(SelectorByHours["hour"]).Text())
+			temp := convertStrToInt(selection.Find(SelectorByHours["temp"]).Text())
+			icon, _ := selection.Find(SelectorByHours["icon"]).Attr("class")
+			forecastByHours = append(forecastByHours, HourTemp{Hour: hour, Temp: temp, Icon: parseIcon(icon)})
 		})
 	}
 
-	return forecast_now, forecast_by_hours, forecast_next
+	return forecastNow, forecastByHours, forecastNext
 }
 
 //-----------------------------------------------------------------------------
 // get icon name from css class attribut
-func parse_icon(css_class string) string {
-	all_attributes := regexp.MustCompile(`\s+`).Split(css_class, -1)
-	for _, attr := range all_attributes {
+func parseIcon(cssClass string) string {
+	allAttributes := regexp.MustCompile(`\s+`).Split(cssClass, -1)
+	for _, attr := range allAttributes {
 		if _, ok := ICONS[attr]; ok {
 			return attr
 		}
@@ -238,85 +238,85 @@ func parse_icon(css_class string) string {
 
 //-----------------------------------------------------------------------------
 // render data as text or JSON
-func render(forecast_now map[string]interface{}, forecast_by_hours []HourTemp, forecast_next []map[string]interface{}, cfg Config) {
-	if _, ok := forecast_now["city"]; ok {
-		out_writer := get_color_writer(cfg.no_color)
+func render(forecastNow map[string]interface{}, forecastByHours []HourTemp, forecastNext []map[string]interface{}, cfg Config) {
+	if _, ok := forecastNow["city"]; ok {
+		outWriter := getColorWriter(cfg.noColor)
 
-		if cfg.get_json {
+		if cfg.getJSON {
 
-			if !cfg.no_today && len(forecast_by_hours) > 0 {
-				forecast_now["by_hours"] = forecast_by_hours
+			if !cfg.noToday && len(forecastByHours) > 0 {
+				forecastNow["by_hours"] = forecastByHours
 			}
 
-			if len(forecast_next) > 0 {
-				for _, row := range forecast_next {
+			if len(forecastNext) > 0 {
+				for _, row := range forecastNext {
 					row["date"] = row["json_date"]
 					delete(row, "json_date")
 				}
-				forecast_now["next_days"] = forecast_next
+				forecastNow["next_days"] = forecastNext
 			}
 
-			json, _ := json.Marshal(forecast_now)
+			json, _ := json.Marshal(forecastNow)
 			fmt.Println(string(json))
 
 		} else {
 
-			fmt.Fprintf(out_writer, cfg.ansi_colour_string("%s (<yellow>%s</>)\n"), forecast_now["city"], BASE_URL+cfg.city)
-			fmt.Fprintf(out_writer,
-				cfg.ansi_colour_string("Сейчас: <green>%d °C</>, <green>%s</>, %s: <green>%d °C</>, %s: <green>%d °C</>\n"),
-				forecast_now["term_now"],
-				forecast_now["desc_now"],
-				forecast_now["term_another_name1"],
-				forecast_now["term_another_value1"],
-				forecast_now["term_another_name2"],
-				forecast_now["term_another_value2"],
+			fmt.Fprintf(outWriter, cfg.ansiColourString("%s (<yellow>%s</>)\n"), forecastNow["city"], BaseURL+cfg.city)
+			fmt.Fprintf(outWriter,
+				cfg.ansiColourString("Сейчас: <green>%d °C</>, <green>%s</>, %s: <green>%d °C</>, %s: <green>%d °C</>\n"),
+				forecastNow["term_now"],
+				forecastNow["desc_now"],
+				forecastNow["term_another_name1"],
+				forecastNow["term_another_value1"],
+				forecastNow["term_another_name2"],
+				forecastNow["term_another_value2"],
 			)
-			fmt.Fprintf(out_writer, cfg.ansi_colour_string("Давление: <green>%s</>\n"), forecast_now["pressure"])
-			fmt.Fprintf(out_writer, cfg.ansi_colour_string("Влажность: <green>%s</>\n"), forecast_now["humidity"])
-			fmt.Fprintf(out_writer, cfg.ansi_colour_string("Ветер: <green>%s</>\n"), forecast_now["wind"])
+			fmt.Fprintf(outWriter, cfg.ansiColourString("Давление: <green>%s</>\n"), forecastNow["pressure"])
+			fmt.Fprintf(outWriter, cfg.ansiColourString("Влажность: <green>%s</>\n"), forecastNow["humidity"])
+			fmt.Fprintf(outWriter, cfg.ansiColourString("Ветер: <green>%s</>\n"), forecastNow["wind"])
 
-			if !cfg.no_today && len(forecast_by_hours) > 0 {
-				text_by_hour := [4]string{}
-				for _, item := range forecast_by_hours {
-					text_by_hour[0] += fmt.Sprintf("%3d ", item.Hour)
-					text_by_hour[2] += fmt.Sprintf("%3d°", item.Temp)
+			if !cfg.noToday && len(forecastByHours) > 0 {
+				textByHour := [4]string{}
+				for _, item := range forecastByHours {
+					textByHour[0] += fmt.Sprintf("%3d ", item.Hour)
+					textByHour[2] += fmt.Sprintf("%3d°", item.Temp)
 					icon, exists := ICONS[item.Icon]
 					if !exists {
 						icon = " "
 					}
-					text_by_hour[3] += fmt.Sprintf(cfg.ansi_colour_string("<blue>%3s</blue> "), icon)
+					textByHour[3] += fmt.Sprintf(cfg.ansiColourString("<blue>%3s</blue> "), icon)
 				}
-				text_by_hour[1] = cfg.ansi_colour_string("<grey+h>" + render_histo(forecast_by_hours) + "</>")
+				textByHour[1] = cfg.ansiColourString("<grey+h>" + renderHisto(forecastByHours) + "</>")
 
-				fmt.Fprintf(out_writer, strings.Repeat("─", len(forecast_by_hours)*4)+"\n")
-				fmt.Fprintf(out_writer, "%s\n%s\n%s\n%s\n",
-					cfg.ansi_colour_string("<grey+h>"+text_by_hour[0]+"</>"),
-					text_by_hour[1],
-					text_by_hour[2],
-					text_by_hour[3],
+				fmt.Fprintf(outWriter, strings.Repeat("─", len(forecastByHours)*4)+"\n")
+				fmt.Fprintf(outWriter, "%s\n%s\n%s\n%s\n",
+					cfg.ansiColourString("<grey+h>"+textByHour[0]+"</>"),
+					textByHour[1],
+					textByHour[2],
+					textByHour[3],
 				)
 			}
 
-			if len(forecast_next) > 0 {
-				desc_length := get_max_length_in_slice(forecast_next, "desc")
-				fmt.Fprintf(out_writer, "%s\n", strings.Repeat("─", 27+desc_length))
-				fmt.Fprintf(out_writer,
-					cfg.ansi_colour_string("<blue+h> %-10s %4s %-*s %8s</>\n"),
+			if len(forecastNext) > 0 {
+				descLength := getMaxLengthInSlice(forecastNext, "desc")
+				fmt.Fprintf(outWriter, "%s\n", strings.Repeat("─", 27+descLength))
+				fmt.Fprintf(outWriter,
+					cfg.ansiColourString("<blue+h> %-10s %4s %-*s %8s</>\n"),
 					"дата",
 					"°C",
-					desc_length, "погода",
+					descLength, "погода",
 					"°C ночью",
 				)
-				fmt.Fprintf(out_writer, "%s\n", strings.Repeat("─", 27+desc_length))
+				fmt.Fprintf(outWriter, "%s\n", strings.Repeat("─", 27+descLength))
 
-				weekend_re := regexp.MustCompile(`(сб|вс)`)
-				for _, row := range forecast_next {
-					date := weekend_re.ReplaceAllString(row["date"].(string), cfg.ansi_colour_string("<red+h>$1</>"))
-					fmt.Fprintf(out_writer,
+				weekendRe := regexp.MustCompile(`(сб|вс)`)
+				for _, row := range forecastNext {
+					date := weekendRe.ReplaceAllString(row["date"].(string), cfg.ansiColourString("<red+h>$1</>"))
+					fmt.Fprintf(outWriter,
 						" %10s %3d° %-*s %7d°\n",
 						date,
 						row["term"].(int),
-						desc_length,
+						descLength,
 						row["desc"],
 						row["term_night"].(int),
 					)
@@ -331,7 +331,7 @@ func render(forecast_now map[string]interface{}, forecast_by_hours []HourTemp, f
 
 //-----------------------------------------------------------------------------
 func main() {
-	cfg := get_params()
-	forecast_now, forecast_by_hours, forecast_next := get_weather(cfg)
-	render(forecast_now, forecast_by_hours, forecast_next, cfg)
+	cfg := getParams()
+	forecastNow, forecastByHours, forecastNext := getWeather(cfg)
+	render(forecastNow, forecastByHours, forecastNext, cfg)
 }

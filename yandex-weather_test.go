@@ -3,7 +3,7 @@ package main
 import "testing"
 
 func Test_clear_integer_in_string(t *testing.T) {
-	test_data := []struct {
+	testData := []struct {
 		in  string
 		out string
 	}{
@@ -22,8 +22,8 @@ func Test_clear_integer_in_string(t *testing.T) {
 		},
 	}
 
-	for _, item := range test_data {
-		out := clear_integer_in_string(item.in)
+	for _, item := range testData {
+		out := clearIntegerInString(item.in)
 		if out != item.out {
 			t.Errorf("expected: %#v, real: %#v", item.out, out)
 		}
@@ -31,7 +31,7 @@ func Test_clear_integer_in_string(t *testing.T) {
 }
 
 func Test_convert_str_to_int(t *testing.T) {
-	test_data := []struct {
+	testData := []struct {
 		in  string
 		out int
 	}{
@@ -56,8 +56,8 @@ func Test_convert_str_to_int(t *testing.T) {
 		},
 	}
 
-	for _, item := range test_data {
-		out := convert_str_to_int(item.in)
+	for _, item := range testData {
+		out := convertStrToInt(item.in)
 		if out != item.out {
 			t.Errorf("expected: %#v, real: %#v", item.out, out)
 		}
@@ -65,7 +65,7 @@ func Test_convert_str_to_int(t *testing.T) {
 }
 
 func Test_parse_icon(t *testing.T) {
-	test_data := []struct {
+	testData := []struct {
 		in  string
 		out string
 	}{
@@ -84,8 +84,8 @@ func Test_parse_icon(t *testing.T) {
 		},
 	}
 
-	for _, item := range test_data {
-		out := parse_icon(item.in)
+	for _, item := range testData {
+		out := parseIcon(item.in)
 		if out != item.out {
 			t.Errorf("expected: %#v, real: %#v", item.out, out)
 		}
@@ -93,7 +93,7 @@ func Test_parse_icon(t *testing.T) {
 }
 
 func Test_get_max_length_in_slice(t *testing.T) {
-	test_data := []struct {
+	testData := []struct {
 		list []map[string]interface{}
 		key  string
 		out  int
@@ -115,8 +115,8 @@ func Test_get_max_length_in_slice(t *testing.T) {
 		},
 	}
 
-	for _, item := range test_data {
-		out := get_max_length_in_slice(item.list, item.key)
+	for _, item := range testData {
+		out := getMaxLengthInSlice(item.list, item.key)
 		if out != item.out {
 			t.Errorf("expected: %#v, real: %#v", item.out, out)
 		}

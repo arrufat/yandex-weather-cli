@@ -14,13 +14,13 @@ var HistoChars = [...]string{"▁", "▂", "▃", "▄", "▅", "▆", "▇", "�
 
 //-----------------------------------------------------------------------------
 // suggest date from one day, returns human date and json date
-func suggestDate(date string, orderNum int) (string, string) {
+func suggestDate(now time.Time, date string, orderNum int) (formatDate string, JSONDate string) {
 	day, err := strconv.Atoi(clearIntegerInString(date))
 	if err != nil {
 		return date, date
 	}
 
-	from := time.Now().AddDate(0, 0, orderNum)
+	from := now.AddDate(0, 0, orderNum)
 
 	for i := 0; day != from.Day() && i < 3; i++ {
 		from = from.AddDate(0, 0, 1)

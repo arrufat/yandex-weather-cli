@@ -28,6 +28,7 @@ import (
 	"regexp"
 	"runtime"
 	"strings"
+	"time"
 
 	"github.com/PuerkitoBio/goquery"
 )
@@ -199,7 +200,7 @@ func getWeather(cfg Config) (map[string]interface{}, []HourTemp, []map[string]in
 
 	// suggest dates
 	for i := range forecastNext {
-		forecastNext[i]["date"], forecastNext[i]["json_date"] = suggestDate(forecastNext[i]["date"].(string), i)
+		forecastNext[i]["date"], forecastNext[i]["json_date"] = suggestDate(time.Now(), forecastNext[i]["date"].(string), i)
 		forecastNext[i]["term"] = convertStrToInt(forecastNext[i]["term"].(string))
 		forecastNext[i]["term_night"] = convertStrToInt(forecastNext[i]["term_night"].(string))
 	}

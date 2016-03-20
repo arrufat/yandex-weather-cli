@@ -2,7 +2,7 @@ package main
 
 import "testing"
 
-func Test_clear_integer_in_string(t *testing.T) {
+func Test_clearIntegerInString(t *testing.T) {
 	testData := []struct {
 		in  string
 		out string
@@ -30,7 +30,7 @@ func Test_clear_integer_in_string(t *testing.T) {
 	}
 }
 
-func Test_convert_str_to_int(t *testing.T) {
+func Test_convertStrToInt(t *testing.T) {
 	testData := []struct {
 		in  string
 		out int
@@ -64,7 +64,7 @@ func Test_convert_str_to_int(t *testing.T) {
 	}
 }
 
-func Test_parse_icon(t *testing.T) {
+func Test_parseIcon(t *testing.T) {
 	testData := []struct {
 		in  string
 		out string
@@ -92,7 +92,7 @@ func Test_parse_icon(t *testing.T) {
 	}
 }
 
-func Test_get_max_length_in_slice(t *testing.T) {
+func Test_getMaxLengthInSlice(t *testing.T) {
 	testData := []struct {
 		list []map[string]interface{}
 		key  string

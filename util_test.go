@@ -3,6 +3,8 @@ package main
 import (
 	"testing"
 	"time"
+
+	"github.com/mgutz/ansi"
 )
 
 func Test_suggestDate(t *testing.T) {
@@ -56,6 +58,7 @@ func Test_suggestDate(t *testing.T) {
 			want1:    "2016-03-18",
 		},
 	}
+
 	for _, tt := range tests {
 		got, got1 := suggestDate(tt.now, tt.date, tt.orderNum)
 		if got != tt.want {
@@ -76,9 +79,71 @@ func Test_clearNonprintInString(t *testing.T) {
 		{"simple string", "str", "str"},
 		{"string with unprinted", string([]byte{0xE2, 0x80, 0x89}) + "str", " str"},
 	}
+
 	for _, tt := range tests {
 		if gotOut := clearNonprintInString(tt.in); gotOut != tt.wantOut {
 			t.Errorf("%q. clearNonprintInString() = '%v', want '%v'", tt.name, gotOut, tt.wantOut)
+		}
+	}
+}
+
+func Test_ansiColourString(t *testing.T) {
+	tests := []struct {
+		name    string
+		city    string
+		getJSON bool
+		noColor bool
+		noToday bool
+		str     string
+		want    string
+	}{
+		{
+			name:    "simple",
+			noColor: true,
+			str:     "string",
+			want:    "string",
+		},
+		{
+			name:    "simple color",
+			noColor: false,
+			str:     "string",
+			want:    "string",
+		},
+		{
+			name:    "with noColor, with tag",
+			noColor: true,
+			str:     "string <green>green</>",
+			want:    "string green",
+		},
+		{
+			name:    "with color, with tag",
+			noColor: false,
+			str:     "string <green>green</>",
+			want:    "string " + ansi.ColorCode("green") + "green" + ansi.ColorCode("reset"),
+		},
+		{
+			name:    "with color, with tag",
+			noColor: false,
+			str:     "string <green>green</green>",
+			want:    "string " + ansi.ColorCode("green") + "green" + ansi.ColorCode("reset"),
+		},
+		{
+			name:    "with color, with unclosed tag",
+			noColor: false,
+			str:     "string <green>green",
+			want:    "string " + ansi.ColorCode("green") + "green",
+		},
+	}
+
+	for _, tt := range tests {
+		cfg := Config{
+			city:    tt.city,
+			getJSON: tt.getJSON,
+			noColor: tt.noColor,
+			noToday: tt.noToday,
+		}
+		if got := cfg.ansiColourString(tt.str); got != tt.want {
+			t.Errorf("%q. Config.ansiColourString() = %v, want %v", tt.name, got, tt.want)
 		}
 	}
 }

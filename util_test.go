@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-func TestSuggestDate(t *testing.T) {
+func Test_suggestDate(t *testing.T) {
 	now, _ := time.Parse("2006-01-02", "2016-03-17")
 	tests := []struct {
 		name     string
@@ -63,6 +63,22 @@ func TestSuggestDate(t *testing.T) {
 		}
 		if got1 != tt.want1 {
 			t.Errorf("%q. suggestDate() got1 = %v, want %v", tt.name, got1, tt.want1)
+		}
+	}
+}
+
+func Test_clearNonprintInString(t *testing.T) {
+	tests := []struct {
+		name    string
+		in      string
+		wantOut string
+	}{
+		{"simple string", "str", "str"},
+		{"string with unprinted", string([]byte{0xE2, 0x80, 0x89}) + "str", " str"},
+	}
+	for _, tt := range tests {
+		if gotOut := clearNonprintInString(tt.in); gotOut != tt.wantOut {
+			t.Errorf("%q. clearNonprintInString() = '%v', want '%v'", tt.name, gotOut, tt.wantOut)
 		}
 	}
 }

@@ -147,3 +147,140 @@ func Test_ansiColourString(t *testing.T) {
 		}
 	}
 }
+
+func Test_renderHisto(t *testing.T) {
+	tests := []struct {
+		name            string
+		forecastByHours []HourTemp
+		want            string
+	}{
+		{
+			name: "1",
+			forecastByHours: []HourTemp{
+				{
+					Hour: 17,
+					Temp: -3,
+					Icon: "icon_rain",
+				},
+				{
+					Hour: 18,
+					Temp: 1,
+					Icon: "icon_snow",
+				},
+				{
+					Hour: 19,
+					Temp: 1,
+					Icon: "icon_snow",
+				},
+				{
+					Hour: 20,
+					Temp: 0,
+					Icon: "icon_snow",
+				},
+				{
+					Hour: 21,
+					Temp: 0,
+					Icon: "",
+				},
+				{
+					Hour: 22,
+					Temp: -2,
+					Icon: "",
+				},
+				{
+					Hour: 23,
+					Temp: -5,
+					Icon: "",
+				},
+				{
+					Hour: 0,
+					Temp: -3,
+					Icon: "icon_snow",
+				},
+				{
+					Hour: 1,
+					Temp: -1,
+					Icon: "icon_snow",
+				},
+				{
+					Hour: 2,
+					Temp: -1,
+					Icon: "icon_snow",
+				},
+				{
+					Hour: 3,
+					Temp: -1,
+					Icon: "icon_snow",
+				},
+				{
+					Hour: 4,
+					Temp: -1,
+					Icon: "icon_snow",
+				},
+				{
+					Hour: 5,
+					Temp: -2,
+					Icon: "icon_snow",
+				},
+				{
+					Hour: 6,
+					Temp: -1,
+					Icon: "icon_snow",
+				},
+			},
+			want: "▃▄▅▆█████▇▇▇▆▆▆▆▆▆▅▅▄▃▂▁▁▁▂▂▃▃▄▅▅▅▅▅▅▅▅▅▅▅▅▅▅▅▅▄▄▄▅▅▅▅▅▅",
+		},
+		{
+			name: "all same temperature",
+			forecastByHours: []HourTemp{
+				{
+					Hour: 17,
+					Temp: 1,
+					Icon: "icon_rain",
+				},
+				{
+					Hour: 18,
+					Temp: 1,
+					Icon: "icon_snow",
+				},
+				{
+					Hour: 19,
+					Temp: 1,
+					Icon: "icon_snow",
+				},
+			},
+			want: "▁▁▁▁▁▁▁▁▁▁▁▁",
+		},
+		{
+			name: "all same negaive temperature",
+			forecastByHours: []HourTemp{
+				{
+					Hour: 17,
+					Temp: -10,
+					Icon: "icon_rain",
+				},
+				{
+					Hour: 18,
+					Temp: -10,
+					Icon: "icon_snow",
+				},
+				{
+					Hour: 19,
+					Temp: -10,
+					Icon: "icon_snow",
+				},
+			},
+			want: "▁▁▁▁▁▁▁▁▁▁▁▁",
+		},
+	}
+
+	for _, tt := range tests {
+		if got := renderHisto(tt.forecastByHours); got != tt.want {
+			t.Errorf("%q. renderHisto() = %v, want %v", tt.name, got, tt.want)
+		}
+	}
+}
+
+func Test_getColorWriter(t *testing.T) {
+	getColorWriter(true)
+}

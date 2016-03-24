@@ -30,7 +30,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/PuerkitoBio/goquery"
+	"github.com/msoap/html2data"
 )
 
 // Config - application config
@@ -81,12 +81,14 @@ var SelectorsNextDays = map[string]string{
 	"term_night": "div.tabs-panes div.forecast-brief__item-temp-night",
 }
 
+// SelectorByHoursRoot - Root element for forecast data
+var SelectorByHoursRoot = "div.temp-chart__wrap"
+
 // SelectorByHours - get forecast by hours
 var SelectorByHours = map[string]string{
-	"root": "div.temp-chart__wrap",
 	"hour": "p.temp-chart__hour",
 	"temp": "div.temp-chart__temp",
-	"icon": "i.icon",
+	"icon": "i.icon:attr(class)",
 }
 
 // ICONS - unicode symbols for icon names
@@ -160,27 +162,28 @@ func getWeatherPage(weatherURL string) *http.Response {
 //-----------------------------------------------------------------------------
 // parse html via goquery, find DOM-nodes with weather forecast data
 func getWeather(cfg Config) (map[string]interface{}, []HourTemp, []map[string]interface{}) {
-	httpResponse := getWeatherPage(BaseURL + cfg.city)
+	doc := html2data.FromURL(BaseURL+cfg.city, html2data.URLCfg{UA: UserAgent})
 
-	doc, err := goquery.NewDocumentFromResponse(httpResponse)
+	// now block
+	forecastNow := map[string]interface{}{}
+	data, err := doc.GetData(Selectors)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	// now block
-	forecastNow := map[string]interface{}{}
-
 	reRemoveDesc := regexp.MustCompile(`^.+\s*:\s*`)
-	for name, selector := range Selectors {
-		doc.Find(selector).Each(func(i int, selection *goquery.Selection) {
-			forecastNow[name] = clearNonprintInString(selection.Text())
-			switch name {
-			case "humidity", "pressure", "wind":
-				forecastNow[name] = reRemoveDesc.ReplaceAllString(forecastNow[name].(string), "")
-			case "term_now", "term_another_value1", "term_another_value2":
-				forecastNow[name] = convertStrToInt(forecastNow[name].(string))
-			}
-		})
+	for name := range Selectors {
+		text := ""
+		if _, ok := data[name]; ok && len(data[name]) > 0 {
+			text = data[name][0]
+		}
+		forecastNow[name] = clearNonprintInString(text)
+		switch name {
+		case "humidity", "pressure", "wind":
+			forecastNow[name] = reRemoveDesc.ReplaceAllString(forecastNow[name].(string), "")
+		case "term_now", "term_another_value1", "term_another_value2":
+			forecastNow[name] = convertStrToInt(forecastNow[name].(string))
+		}
 		if name == "wind" && forecastNow[name] == nil {
 			forecastNow[name] = "0 м/с"
 		}
@@ -188,14 +191,23 @@ func getWeather(cfg Config) (map[string]interface{}, []HourTemp, []map[string]in
 
 	// forecast for next days block
 	forecastNext := make([]map[string]interface{}, 0, ForecastDays)
-	for name, selector := range SelectorsNextDays {
-		doc.Find(selector).Each(func(i int, selection *goquery.Selection) {
-			if len(forecastNext)-1 < i {
-				forecastNext = append(forecastNext, map[string]interface{}{})
-			}
+	data, err = doc.GetData(SelectorsNextDays)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-			forecastNext[i][name] = clearNonprintInString(selection.Text())
-		})
+	if dateColumn, ok := data["date"]; ok {
+		for i := range dateColumn {
+			forecastNext = append(forecastNext, map[string]interface{}{})
+
+			for name := range SelectorsNextDays {
+				text := ""
+				if _, ok := data[name]; ok && len(data[name]) >= i+1 {
+					text = data[name][i]
+				}
+				forecastNext[i][name] = clearNonprintInString(text)
+			}
+		}
 	}
 
 	// suggest dates
@@ -208,18 +220,17 @@ func getWeather(cfg Config) (map[string]interface{}, []HourTemp, []map[string]in
 	// forecast by hours block
 	var forecastByHours []HourTemp
 	if !cfg.noToday {
-		httpResponse = getWeatherPage(BaseURLMini + cfg.city)
-		doc, err = goquery.NewDocumentFromResponse(httpResponse)
+		docMini := html2data.FromURL(BaseURLMini+cfg.city, html2data.URLCfg{UA: UserAgent})
+		data, err := docMini.GetDataNested(SelectorByHoursRoot, SelectorByHours)
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		doc.Find(SelectorByHours["root"]).Each(func(i int, selection *goquery.Selection) {
-			hour := convertStrToInt(selection.Find(SelectorByHours["hour"]).Text())
-			temp := convertStrToInt(selection.Find(SelectorByHours["temp"]).Text())
-			icon, _ := selection.Find(SelectorByHours["icon"]).Attr("class")
-			forecastByHours = append(forecastByHours, HourTemp{Hour: hour, Temp: temp, Icon: parseIcon(icon)})
-		})
+		for _, row := range data {
+			hour := convertStrToInt(row["hour"][0])
+			temp := convertStrToInt(row["temp"][0])
+			forecastByHours = append(forecastByHours, HourTemp{Hour: hour, Temp: temp, Icon: parseIcon(row["icon"][0])})
+		}
 	}
 
 	return forecastNow, forecastByHours, forecastNext

@@ -166,18 +166,14 @@ func getWeather(cfg Config) (map[string]interface{}, []HourTemp, []map[string]in
 
 	// now block
 	forecastNow := map[string]interface{}{}
-	data, err := doc.GetData(Selectors)
+	data, err := doc.GetDataFirst(Selectors)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	reRemoveDesc := regexp.MustCompile(`^.+\s*:\s*`)
 	for name := range Selectors {
-		text := ""
-		if _, ok := data[name]; ok && len(data[name]) > 0 {
-			text = data[name][0]
-		}
-		forecastNow[name] = clearNonprintInString(text)
+		forecastNow[name] = clearNonprintInString(data[name])
 		switch name {
 		case "humidity", "pressure", "wind":
 			forecastNow[name] = reRemoveDesc.ReplaceAllString(forecastNow[name].(string), "")
@@ -191,19 +187,19 @@ func getWeather(cfg Config) (map[string]interface{}, []HourTemp, []map[string]in
 
 	// forecast for next days block
 	forecastNext := make([]map[string]interface{}, 0, ForecastDays)
-	data, err = doc.GetData(SelectorsNextDays)
+	dataNextDays, err := doc.GetData(SelectorsNextDays)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	if dateColumn, ok := data["date"]; ok {
+	if dateColumn, ok := dataNextDays["date"]; ok {
 		for i := range dateColumn {
 			forecastNext = append(forecastNext, map[string]interface{}{})
 
 			for name := range SelectorsNextDays {
 				text := ""
-				if _, ok := data[name]; ok && len(data[name]) >= i+1 {
-					text = data[name][i]
+				if _, ok := dataNextDays[name]; ok && len(dataNextDays[name]) >= i+1 {
+					text = dataNextDays[name][i]
 				}
 				forecastNext[i][name] = clearNonprintInString(text)
 			}
@@ -221,12 +217,12 @@ func getWeather(cfg Config) (map[string]interface{}, []HourTemp, []map[string]in
 	var forecastByHours []HourTemp
 	if !cfg.noToday {
 		docMini := html2data.FromURL(BaseURLMini+cfg.city, html2data.URLCfg{UA: UserAgent})
-		data, err := docMini.GetDataNested(SelectorByHoursRoot, SelectorByHours)
+		dataHours, err := docMini.GetDataNested(SelectorByHoursRoot, SelectorByHours)
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		for _, row := range data {
+		for _, row := range dataHours {
 			hour := convertStrToInt(row["hour"][0])
 			temp := convertStrToInt(row["temp"][0])
 			forecastByHours = append(forecastByHours, HourTemp{Hour: hour, Temp: temp, Icon: parseIcon(row["icon"][0])})

@@ -57,6 +57,8 @@ const (
 	UserAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11) AppleWebKit/601.1.56 (KHTML, like Gecko) Version/9.0 Safari/601.1.56"
 	// ForecastDays - parse days in forecast
 	ForecastDays = 10
+	// TodayForecastTableWidth - today forecast table width for align tables
+	TodayForecastTableWidth = 14*4 - 27
 )
 
 // Selectors - css selectors for forecast today
@@ -307,6 +309,11 @@ func render(forecastNow map[string]interface{}, forecastByHours []HourTemp, fore
 
 			if len(forecastNext) > 0 {
 				descLength := getMaxLengthInSlice(forecastNext, "desc")
+				if descLength < TodayForecastTableWidth {
+					// align with today forecast
+					descLength = TodayForecastTableWidth
+				}
+
 				fmt.Fprintf(outWriter, "%s\n", strings.Repeat("─", 27+descLength))
 				fmt.Fprintf(outWriter,
 					cfg.ansiColourString("<blue+h> %-10s %4s %-*s %8s</>\n"),

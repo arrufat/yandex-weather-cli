@@ -22,8 +22,6 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"net/http"
-	"net/http/cookiejar"
 	"os"
 	"regexp"
 	"runtime"
@@ -129,36 +127,6 @@ func getParams() (cfg Config) {
 	}
 
 	return cfg
-}
-
-//-----------------------------------------------------------------------------
-// get weather html page as http.Response
-func getWeatherPage(weatherURL string) *http.Response {
-	cookie, _ := cookiejar.New(nil)
-	client := &http.Client{
-		Jar: cookie,
-	}
-
-	request, err := http.NewRequest("GET", weatherURL, nil)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	request.Header.Set("User-Agent", UserAgent)
-
-	// create request for set cookies only
-	response, err := client.Do(request)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	response, err = client.Get(weatherURL)
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	return response
 }
 
 //-----------------------------------------------------------------------------

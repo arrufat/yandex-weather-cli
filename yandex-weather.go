@@ -163,7 +163,11 @@ func getWeather(cfg Config) (map[string]interface{}, []HourTemp, []map[string]in
 	}
 
 	if dateColumn, ok := dataNextDays["date"]; ok {
-		for i := range dateColumn {
+		for i, dateStr := range dateColumn {
+			if dateStr == "" {
+				continue
+			}
+
 			forecastNext = append(forecastNext, map[string]interface{}{})
 
 			for name := range SelectorsNextDays {

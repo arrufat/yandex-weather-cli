@@ -192,14 +192,12 @@ func getWeather(cfg Config) (map[string]interface{}, []HourTemp, []map[string]in
 	if !cfg.noToday {
 		docMini := html2data.FromURL(BaseURLMini+cfg.city, html2data.URLCfg{UA: UserAgent})
 		dataHours, err := docMini.GetDataNestedFirst(SelectorByHoursRoot, SelectorByHours)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		for _, row := range dataHours {
-			hour := convertStrToInt(row["hour"])
-			temp := convertStrToInt(row["temp"])
-			forecastByHours = append(forecastByHours, HourTemp{Hour: hour, Temp: temp, Icon: parseIcon(row["icon"])})
+		if err == nil {
+			for _, row := range dataHours {
+				hour := convertStrToInt(row["hour"])
+				temp := convertStrToInt(row["temp"])
+				forecastByHours = append(forecastByHours, HourTemp{Hour: hour, Temp: temp, Icon: parseIcon(row["icon"])})
+			}
 		}
 	}
 

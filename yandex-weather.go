@@ -219,7 +219,7 @@ func parseIcon(cssClass string) string {
 //-----------------------------------------------------------------------------
 // render data as text or JSON
 func render(forecastNow map[string]interface{}, forecastByHours []HourTemp, forecastNext []map[string]interface{}, cfg Config) {
-	if _, ok := forecastNow["city"]; ok {
+	if cityFromPage, ok := forecastNow["city"]; ok && cityFromPage != "" {
 		outWriter := getColorWriter(cfg.noColor)
 
 		if cfg.getJSON {
@@ -241,7 +241,7 @@ func render(forecastNow map[string]interface{}, forecastByHours []HourTemp, fore
 
 		} else {
 
-			fmt.Fprintf(outWriter, cfg.ansiColourString("%s (<yellow>%s</>)\n"), forecastNow["city"], BaseURL+cfg.city)
+			fmt.Fprintf(outWriter, cfg.ansiColourString("%s (<yellow>%s</>)\n"), cityFromPage, BaseURL+cfg.city)
 			fmt.Fprintf(outWriter,
 				cfg.ansiColourString("Сейчас: <green>%d °C</>, <green>%s</>, %s: <green>%d °C</>, %s: <green>%d °C</>\n"),
 				forecastNow["term_now"],
@@ -310,7 +310,7 @@ func render(forecastNow map[string]interface{}, forecastByHours []HourTemp, fore
 		}
 
 	} else {
-		fmt.Printf("City \"%s\" dont found\n", cfg.city)
+		fmt.Printf("City \"%s\" not found\n", cfg.city)
 	}
 }
 

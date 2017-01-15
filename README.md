@@ -14,7 +14,7 @@ MacOS via homebrew:
     brew tap msoap/tools
     brew install yandex-weather-cli
     # update:
-    brew update; brew upgrade yandex-weather-cli
+    brew upgrade yandex-weather-cli
 
 Or download binaries from: [releases](https://github.com/msoap/yandex-weather-cli/releases) (OS X/Linux/Windows/RaspberryPi)
 

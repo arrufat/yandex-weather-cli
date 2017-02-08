@@ -43,4 +43,6 @@ deploy:
   skip_cleanup: true
   on:
     tags: true
+    branch: master
+    condition: $TRAVIS_GO_VERSION =~ $CURRENT_GO_VERSION
     repo: msoap/yandex-weather-cli

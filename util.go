@@ -90,15 +90,12 @@ func clearNonprintInString(in string) (out string) {
 func (cfg Config) ansiColourString(str string) string {
 	oneColor := `(black|red|green|yellow|blue|magenta|cyan|white|grey|\d{1,3})(\+[bBuih]+)?`
 	re := regexp.MustCompile(`<(` + oneColor + `(:` + oneColor + `)?|/\w*)>`)
-	result := re.ReplaceAllStringFunc(str, func(in string) string {
+	result := re.ReplaceAllStringFunc(str, func(in string) (out string) {
 		if cfg.noColor {
 			return ""
 		}
 
-		out := in
-		tag := in[1 : len(in)-1]
-
-		if tag[0] == '/' {
+		if tag := in[1 : len(in)-1]; tag[0] == '/' {
 			out = ansi.ColorCode("reset")
 		} else {
 			out = ansi.ColorCode(tag)

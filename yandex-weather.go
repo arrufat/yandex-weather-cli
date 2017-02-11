@@ -120,8 +120,7 @@ func getParams() (cfg Config) {
 		cfg.noToday = true
 	} else {
 		// detect pipe
-		stdoutStat, _ := os.Stdout.Stat()
-		if (stdoutStat.Mode() & os.ModeCharDevice) == 0 {
+		if stdoutStat, err := os.Stdout.Stat(); err != nil || (stdoutStat.Mode()&os.ModeCharDevice) == 0 {
 			cfg.noColor = true
 		}
 	}

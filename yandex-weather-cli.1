@@ -1,0 +1,82 @@
+.\" generated with Ronn/v0.7.3
+.\" http://github.com/rtomayko/ronn/tree/0.7.3
+.
+.TH "YANDEX\-WEATHER\-CLI" "" "February 2017" "" ""
+.
+.SH "Install"
+MacOS via homebrew:
+.
+.IP "" 4
+.
+.nf
+
+brew tap msoap/tools
+brew install yandex\-weather\-cli
+# update:
+brew upgrade yandex\-weather\-cli
+.
+.fi
+.
+.IP "" 0
+.
+.P
+Or download binaries from: releases \fIhttps://github\.com/msoap/yandex\-weather\-cli/releases\fR (OS X/Linux/Windows/RaspberryPi)
+.
+.P
+Or build from source:
+.
+.IP "" 4
+.
+.nf
+
+go get \-u github\.com/msoap/yandex\-weather\-cli
+ln \-s $GOPATH/bin/yandex\-weather\-cli ~/bin/
+.
+.fi
+.
+.IP "" 0
+.
+.SH "Usage"
+.
+.nf
+
+# weather client by default use your current location
+yandex\-weather\-cli [options] [city]
+
+# options
+    \-json     : JSON out
+    \-no\-color : no coloring
+    \-no\-today : skip today forecast
+    \-help
+
+# in another city
+yandex\-weather\-cli kiev
+yandex\-weather\-cli london
+
+# JSON out
+yandex\-weather\-cli \-json london
+.
+.fi
+.
+.SH "See also"
+.
+.IP "\(bu" 4
+pogoda\.yandex\.ru \fIhttps://pogoda\.yandex\.ru/\fR
+.
+.IP "\(bu" 4
+github\.com/schachmat/wego \fIhttps://github\.com/schachmat/wego\fR \- another weather command line client (Go)
+.
+.IP "\(bu" 4
+github\.com/jfrazelle/weather \fIhttps://github\.com/jfrazelle/weather\fR \- another weather command line client (Go)
+.
+.IP "\(bu" 4
+github\.com/sramsay/wu \fIhttps://github\.com/sramsay/wu\fR \- another weather command line client (Go)
+.
+.IP "\(bu" 4
+github\.com/brianriley/weather\-cli \fIhttps://github\.com/brianriley/weather\-cli\fR \- another weather command line client (Python)
+.
+.IP "\(bu" 4
+github\.com/JackWink/Weather \fIhttps://github\.com/JackWink/Weather\fR \- another weather command line client (Python)
+.
+.IP "" 0
+

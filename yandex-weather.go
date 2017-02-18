@@ -7,7 +7,7 @@ usage:
 
 	./yandex-weather
 	./yandex-weather -no-color
-	./yandex-weather kiev
+	./yandex-weather kyiv
 
 	# JSON out
 	./yandex-weather -json london
@@ -47,12 +47,12 @@ type HourTemp struct {
 }
 
 const (
-	// BaseURL - yandex pogoda service url (testing: "http://localhost:8080/get?url=https://pogoda.yandex.ru/")
-	BaseURL = "https://pogoda.yandex.ru/"
+	// BaseURL - yandex pogoda service url (testing: "http://localhost:8080/get?url=https://yandex.ru/pogoda/")
+	BaseURL = "https://yandex.ru/pogoda/"
 	// BaseURLMini - url for forecast by hours (testing: "http://localhost:8080/get?url=https://p.ya.ru/")
 	BaseURLMini = "https://p.ya.ru/"
 	// UserAgent - for http.request
-	UserAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11) AppleWebKit/601.1.56 (KHTML, like Gecko) Version/9.0 Safari/601.1.56"
+	UserAgent = "yandex-weather-cli/1.8"
 	// ForecastDays - parse days in forecast
 	ForecastDays = 10
 	// TodayForecastTableWidth - today forecast table width for align tables
@@ -106,7 +106,7 @@ func getParams() (cfg Config) {
 	flag.Usage = func() {
 		fmt.Printf("Usage: %s [options] [city]\noptions:\n", os.Args[0])
 		flag.PrintDefaults()
-		fmt.Printf("\nexamples:\n  %s kiev\n  %s -json london\n", os.Args[0], os.Args[0])
+		fmt.Printf("\nexamples:\n  %s kyiv\n  %s -json london\n", os.Args[0], os.Args[0])
 	}
 	flag.Parse()
 

@@ -36,7 +36,7 @@ Usage
         -help
 
     # in another city
-    yandex-weather-cli kiev
+    yandex-weather-cli kyiv
     yandex-weather-cli london
 
     # JSON out

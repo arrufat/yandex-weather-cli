@@ -7,7 +7,7 @@ Command line interface for Yandex weather service
 [![Report Card](https://goreportcard.com/badge/github.com/msoap/yandex-weather-cli)](https://goreportcard.com/report/github.com/msoap/yandex-weather-cli)
 
 Install
--------------------
+-------
 
 MacOS via homebrew:
 

@@ -20,9 +20,9 @@ func suggestDate(now time.Time, date string, orderNum int) (formatDate string, J
 		return date, date
 	}
 
-	from := now.AddDate(0, 0, orderNum)
+	from := now.AddDate(0, 0, orderNum-1)
 
-	for i := 0; day != from.Day() && i < 3; i++ {
+	for i := 0; day != from.Day() && i < 4; i++ {
 		from = from.AddDate(0, 0, 1)
 	}
 

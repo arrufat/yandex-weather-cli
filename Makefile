@@ -33,9 +33,9 @@ generate-manpage:
 create-debian-amd64-package:
 	GOOS=linux GOARCH=amd64 go build -ldflags="-w" -o $(APP_NAME)
 	docker run --rm -v $$PWD:/app -w /app msoap/ruby-fpm \
-		fpm -s dir -t deb --force --name $(APP_NAME) -v $(GIT_TAG) \
+		fpm -s dir -t deb --force --name $(APP_NAME) -v "$(GIT_TAG)" \
 			--license="$$(head -1 LICENSE)" \
-			--url=$(APP_URL) \
+			--url="$(APP_URL)" \
 			--description="$(APP_DESCRIPTION)" \
 			--maintainer="$(APP_MAINTAINER)" \
 			--category=network \

@@ -2,7 +2,7 @@ APP_NAME := yandex-weather-cli
 APP_DESCRIPTION := $$(head -1 README.md)
 APP_URL := https://github.com/msoap/$(APP_NAME)
 APP_MAINTAINER := $$(git show HEAD | awk '$$1 == "Author:" {print $$2 " " $$3 " " $$4}')
-GIT_TAG := $$(git tag 2>/dev/null | grep -E '^[0-9]+' | tail -1)
+GIT_TAG := $$(git tag --sort=version:refname | tail -1)
 
 build:
 	go build

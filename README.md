@@ -42,6 +42,13 @@ Usage
     # JSON out
     yandex-weather-cli -json london
 
+### Environment variables
+
+For setup own yandex.pogoda URL, you may set variables:
+
+  * `Y_WEATHER_URL`
+  * `Y_WEATHER_MINI_URL`
+
 Screenshot
 ----------
 <img src="https://raw.githubusercontent.com/msoap/yandex-weather-cli/misc/img/yandex-weather.go.2015-12-28.0.screenshot.png" align="center" alt="Screenshot" height="539" width="764">

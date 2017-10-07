@@ -33,10 +33,12 @@ import (
 
 // Config - application config
 type Config struct {
-	city    string
-	getJSON bool
-	noColor bool
-	noToday bool
+	baseURL     string
+	baseURLMini string
+	city        string
+	getJSON     bool
+	noColor     bool
+	noToday     bool
 }
 
 // HourTemp - one hour temperature
@@ -47,10 +49,14 @@ type HourTemp struct {
 }
 
 const (
-	// BaseURL - yandex pogoda service url (testing: "http://localhost:8080/get?url=https://yandex.ru/pogoda/")
-	BaseURL = "https://yandex.ru/pogoda/"
-	// BaseURLMini - url for forecast by hours (testing: "http://localhost:8080/get?url=https://p.ya.ru/")
-	BaseURLMini = "https://p.ya.ru/"
+	// EnvBaseURLName - environment variable for setup base URL
+	EnvBaseURLName = "Y_WEATHER_URL"
+	// EnvBaseURLMiniName - environment variable for setup base URL (for days forecast)
+	EnvBaseURLMiniName = "Y_WEATHER_MINI_URL"
+	// BaseURLDefault - yandex pogoda service url (testing: "http://localhost:8080/get?url=https://yandex.ru/pogoda/")
+	BaseURLDefault = "https://yandex.ru/pogoda/"
+	// BaseURLMiniDefault - url for forecast by hours (testing: "http://localhost:8080/get?url=https://p.ya.ru/")
+	BaseURLMiniDefault = "https://p.ya.ru/"
 	// UserAgent - for http.request
 	UserAgent = "yandex-weather-cli/1.10"
 	// ForecastDays - parse days in forecast
@@ -129,13 +135,24 @@ func getParams() (cfg Config) {
 		}
 	}
 
+	if baseURL := os.Getenv(EnvBaseURLName); len(baseURL) > 0 {
+		cfg.baseURL = baseURL
+	} else {
+		cfg.baseURL = BaseURLDefault
+	}
+	if baseURLMini := os.Getenv(EnvBaseURLMiniName); len(baseURLMini) > 0 {
+		cfg.baseURLMini = baseURLMini
+	} else {
+		cfg.baseURLMini = BaseURLMiniDefault
+	}
+
 	return cfg
 }
 
 //-----------------------------------------------------------------------------
 // parse html via goquery, find DOM-nodes with weather forecast data
 func getWeather(cfg Config) (map[string]interface{}, []HourTemp, []map[string]interface{}) {
-	doc := html2data.FromURL(BaseURL+cfg.city, html2data.URLCfg{UA: UserAgent})
+	doc := html2data.FromURL(cfg.baseURL+cfg.city, html2data.URLCfg{UA: UserAgent})
 
 	// now block
 	forecastNow := map[string]interface{}{}
@@ -199,7 +216,7 @@ func getWeather(cfg Config) (map[string]interface{}, []HourTemp, []map[string]in
 	// forecast by hours block
 	var forecastByHours []HourTemp
 	if !cfg.noToday {
-		docMini := html2data.FromURL(BaseURLMini+cfg.city, html2data.URLCfg{UA: UserAgent})
+		docMini := html2data.FromURL(cfg.baseURLMini+cfg.city, html2data.URLCfg{UA: UserAgent})
 		dataHours, err := docMini.GetDataNestedFirst(SelectorByHoursRoot, SelectorByHours)
 		if err == nil {
 			for _, row := range dataHours {
@@ -250,7 +267,7 @@ func render(forecastNow map[string]interface{}, forecastByHours []HourTemp, fore
 
 		} else {
 
-			fmt.Fprintf(outWriter, cfg.ansiColourString("%s (<yellow>%s</>)\n"), cityFromPage, BaseURL+cfg.city)
+			fmt.Fprintf(outWriter, cfg.ansiColourString("%s (<yellow>%s</>)\n"), cityFromPage, cfg.baseURL+cfg.city)
 			fmt.Fprintf(outWriter,
 				cfg.ansiColourString("Сейчас: <green>%d °C</>, <green>%s</>\n"),
 				forecastNow["term_now"],

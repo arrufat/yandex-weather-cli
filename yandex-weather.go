@@ -52,7 +52,7 @@ const (
 	// BaseURLMini - url for forecast by hours (testing: "http://localhost:8080/get?url=https://p.ya.ru/")
 	BaseURLMini = "https://p.ya.ru/"
 	// UserAgent - for http.request
-	UserAgent = "yandex-weather-cli/1.8"
+	UserAgent = "yandex-weather-cli/1.10"
 	// ForecastDays - parse days in forecast
 	ForecastDays = 10
 	// TodayForecastTableWidth - today forecast table width for align tables
@@ -61,24 +61,28 @@ const (
 
 // Selectors - css selectors for forecast today
 var Selectors = map[string]string{
-	"city":                "div.navigation-city h1",
-	"term_now":            "div.current-weather div.current-weather__thermometer_type_now",
-	"term_another_name1":  "span.current-weather__col:nth-child(3) span.current-weather__thermometer-name",
-	"term_another_name2":  "span.current-weather__col:nth-child(4) span.current-weather__thermometer-name",
-	"term_another_value1": "span.current-weather__col:nth-child(3) div.current-weather__thermometer",
-	"term_another_value2": "span.current-weather__col:nth-child(4) div.current-weather__thermometer",
-	"desc_now":            "div.current-weather span.current-weather__comment",
-	"wind":                "div.current-weather div.current-weather__info-row:nth-child(2) span.wind-speed",
-	"humidity":            "div.current-weather div.current-weather__info-row:nth-child(3)",
-	"pressure":            "div.current-weather div.current-weather__info-row:nth-child(4)",
+	"city":                "div.location h1.title",
+	"term_now":            "div.fact div.fact__temp",
+	"term_another_name1":  "div.content__brief a.link:nth-child(1) div.day-parts-next__name",
+	"term_another_value1": "div.content__brief a.link:nth-child(1) div.day-parts-next__value",
+	"term_another_name2":  "div.content__brief a.link:nth-child(2) div.day-parts-next__name",
+	"term_another_value2": "div.content__brief a.link:nth-child(2) div.day-parts-next__value",
+	"term_another_name3":  "div.content__brief a.link:nth-child(3) div.day-parts-next__name",
+	"term_another_value3": "div.content__brief a.link:nth-child(3) div.day-parts-next__value",
+	"term_another_name4":  "div.content__brief a.link:nth-child(4) div.day-parts-next__name",
+	"term_another_value4": "div.content__brief a.link:nth-child(4) div.day-parts-next__value",
+	"desc_now":            "div.fact div.fact__condition",
+	"wind":                "div.fact div.fact__props dl.fact__wind-speed dd.term__value",
+	"humidity":            "div.fact div.fact__props dl.fact__humidity dd.term__value",
+	"pressure":            "div.fact div.fact__props dl.fact__pressure dd.term__value",
 }
 
 // SelectorsNextDays - css selectors for forecast next days
 var SelectorsNextDays = map[string]string{
-	"date":       "div.tabs-panes span.forecast-brief__item-day",
-	"desc":       "div.tabs-panes div.forecast-brief__item-comment",
-	"term":       "div.tabs-panes div.forecast-brief__item-temp-day",
-	"term_night": "div.tabs-panes div.forecast-brief__item-temp-night",
+	"date":       "div.forecast-briefly__days time.time",
+	"desc":       "div.forecast-briefly__days div.forecast-briefly__condition",
+	"term":       "div.forecast-briefly__days div.forecast-briefly__temp_day span.temp__value",
+	"term_night": "div.forecast-briefly__days div.forecast-briefly__temp_night span.temp__value",
 }
 
 // SelectorByHoursRoot - Root element for forecast data
@@ -146,8 +150,10 @@ func getWeather(cfg Config) (map[string]interface{}, []HourTemp, []map[string]in
 		switch name {
 		case "humidity", "pressure", "wind":
 			forecastNow[name] = reRemoveDesc.ReplaceAllString(forecastNow[name].(string), "")
-		case "term_now", "term_another_value1", "term_another_value2":
-			forecastNow[name] = convertStrToInt(forecastNow[name].(string))
+		case "term_now", "term_another_value1", "term_another_value2", "term_another_value3", "term_another_value4":
+			if value, ok := forecastNow[name]; ok {
+				forecastNow[name] = convertStrToInt(value.(string))
+			}
 		}
 		if name == "wind" && forecastNow[name] == nil {
 			forecastNow[name] = "0 м/с"
@@ -175,6 +181,10 @@ func getWeather(cfg Config) (map[string]interface{}, []HourTemp, []map[string]in
 					text = dataNextDays[name][i]
 				}
 				forecastNext[i][name] = clearNonprintInString(text)
+
+				if value, ok := forecastNext[i][name].(string); ok && name == "desc" {
+					forecastNext[i][name] = strings.ToLower(value)
+				}
 			}
 		}
 	}
@@ -242,14 +252,25 @@ func render(forecastNow map[string]interface{}, forecastByHours []HourTemp, fore
 
 			fmt.Fprintf(outWriter, cfg.ansiColourString("%s (<yellow>%s</>)\n"), cityFromPage, BaseURL+cfg.city)
 			fmt.Fprintf(outWriter,
-				cfg.ansiColourString("Сейчас: <green>%d °C</>, <green>%s</>, %s: <green>%d °C</>, %s: <green>%d °C</>\n"),
+				cfg.ansiColourString("Сейчас: <green>%d °C</>, <green>%s</>\n"),
 				forecastNow["term_now"],
 				forecastNow["desc_now"],
-				forecastNow["term_another_name1"],
-				forecastNow["term_another_value1"],
-				forecastNow["term_another_name2"],
-				forecastNow["term_another_value2"],
 			)
+
+			if _, ok := forecastNow["term_another_value1"]; ok {
+				fmt.Fprintf(outWriter, "  ")
+				for _, num := range []string{"1", "2", "3", "4"} {
+					if value, ok := forecastNow["term_another_value"+num].(int); ok {
+						fmt.Fprintf(outWriter,
+							cfg.ansiColourString("%s: <green>%d °C</> "),
+							forecastNow["term_another_name"+num],
+							value,
+						)
+					}
+				}
+				fmt.Fprintf(outWriter, "\n")
+			}
+
 			fmt.Fprintf(outWriter, cfg.ansiColourString("Давление: <green>%s</>\n"), forecastNow["pressure"])
 			fmt.Fprintf(outWriter, cfg.ansiColourString("Влажность: <green>%s</>\n"), forecastNow["humidity"])
 			fmt.Fprintf(outWriter, cfg.ansiColourString("Ветер: <green>%s</>\n"), forecastNow["wind"])

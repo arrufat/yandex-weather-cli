@@ -126,7 +126,7 @@ func getParams() (cfg Config) {
 	}
 
 	if runtime.GOOS == "windows" {
-		// broken unicode symbols in cmd.exe and dont detect pipe
+		// broken unicode symbols in cmd.exe and don't detect pipe
 		cfg.noToday = true
 	} else {
 		// detect pipe

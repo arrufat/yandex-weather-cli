@@ -252,7 +252,7 @@ func Test_renderHisto(t *testing.T) {
 			want: "▁▁▁▁▁▁▁▁▁▁▁▁",
 		},
 		{
-			name: "all same negaive temperature",
+			name: "all same negative temperature",
 			forecastByHours: []HourTemp{
 				{
 					Hour: 17,

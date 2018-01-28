@@ -262,8 +262,8 @@ func render(forecastNow map[string]interface{}, forecastByHours []HourTemp, fore
 				forecastNow["next_days"] = forecastNext
 			}
 
-			json, _ := json.Marshal(forecastNow)
-			fmt.Println(string(json))
+			jsonBytes, _ := json.Marshal(forecastNow)
+			fmt.Println(string(jsonBytes))
 
 		} else {
 
@@ -275,7 +275,7 @@ func render(forecastNow map[string]interface{}, forecastByHours []HourTemp, fore
 			)
 
 			if _, ok := forecastNow["term_another_value1"]; ok {
-				fmt.Fprintf(outWriter, "  ")
+				fmt.Fprint(outWriter, "  ")
 				for _, num := range []string{"1", "2", "3", "4"} {
 					if value, ok := forecastNow["term_another_value"+num].(int); ok {
 						fmt.Fprintf(outWriter,
@@ -285,7 +285,7 @@ func render(forecastNow map[string]interface{}, forecastByHours []HourTemp, fore
 						)
 					}
 				}
-				fmt.Fprintf(outWriter, "\n")
+				fmt.Fprint(outWriter, "\n")
 			}
 
 			fmt.Fprintf(outWriter, cfg.ansiColourString("Давление: <green>%s</>\n"), forecastNow["pressure"])

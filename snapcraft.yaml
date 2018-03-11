@@ -7,10 +7,10 @@ confinement: strict
 
 parts:
   yandex-weather-cli:
+    after: [go]
     source: .
     plugin: go
     go-importpath: github.com/msoap/yandex-weather-cli
-    after: [go]
   go:
     source-tag: go1.10
 

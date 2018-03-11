@@ -1,0 +1,17 @@
+name: yandex-weather-cli
+version: '1.10'
+summary: Command line interface for Yandex weather service
+description:
+
+grade: devel
+confinement: devmode
+
+parts:
+  yandex-weather-cli:
+    source: .
+    plugin: go
+    go-importpath: github.com/msoap/yandex-weather-cli
+
+apps:
+  yandex-weather-cli:
+    command: yandex-weather-cli

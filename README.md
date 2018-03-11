@@ -26,7 +26,7 @@ Or build from source:
 
 Or use snap (Ubuntu or any Linux distribution with snap)
 
-    sudo snap install yandex-weather-cli
+    sudo snap install --edge yandex-weather-cli
     # update
     sudo snap refresh yandex-weather-cli
 

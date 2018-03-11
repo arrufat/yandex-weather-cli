@@ -29,7 +29,7 @@ Or use snap (Ubuntu or any Linux distribution with snap)
     # install stable version:
     sudo snap install yandex-weather-cli
     
-    # install the last version:
+    # install the latest version:
     sudo snap install --edge yandex-weather-cli
     
     # update

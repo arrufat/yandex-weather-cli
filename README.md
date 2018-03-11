@@ -4,6 +4,7 @@ Command line interface for Yandex weather service
 [![Build Status](https://travis-ci.org/msoap/yandex-weather-cli.svg?branch=master)](https://travis-ci.org/msoap/yandex-weather-cli)
 [![Coverage Status](https://coveralls.io/repos/github/msoap/yandex-weather-cli/badge.svg?branch=master)](https://coveralls.io/github/msoap/yandex-weather-cli?branch=master)
 [![Homebrew formula exists](https://img.shields.io/badge/homebrew-🍺-d7af72.svg)](https://github.com/msoap/yandex-weather-cli#install)
+[![Snap Status](https://build.snapcraft.io/badge/msoap/yandex-weather-cli.svg)](https://build.snapcraft.io/user/msoap/yandex-weather-cli)
 [![Report Card](https://goreportcard.com/badge/github.com/msoap/yandex-weather-cli)](https://goreportcard.com/report/github.com/msoap/yandex-weather-cli)
 
 Install
@@ -22,6 +23,12 @@ Or build from source:
 
     go get -u github.com/msoap/yandex-weather-cli
     ln -s $GOPATH/bin/yandex-weather-cli ~/bin/
+
+Or use snap (Ubuntu or any Linux distribution with snap)
+
+    sudo snap install yandex-weather-cli
+    # update
+    sudo snap refresh yandex-weather-cli
 
 Usage
 -----

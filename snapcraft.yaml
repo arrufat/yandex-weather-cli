@@ -2,7 +2,6 @@ name: yandex-weather-cli
 version: '1.10'
 summary: Yandex weather cli
 description: Command line interface for Yandex weather service
-
 grade: stable
 confinement: strict
 

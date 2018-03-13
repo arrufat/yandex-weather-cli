@@ -1,7 +1,7 @@
 .\" generated with Ronn/v0.7.3
 .\" http://github.com/rtomayko/ronn/tree/0.7.3
 .
-.TH "YANDEX\-WEATHER\-CLI" "" "October 2017" "" ""
+.TH "YANDEX\-WEATHER\-CLI" "" "March 2018" "" ""
 .
 .SH "Install"
 MacOS via homebrew:
@@ -31,6 +31,26 @@ Or build from source:
 
 go get \-u github\.com/msoap/yandex\-weather\-cli
 ln \-s $GOPATH/bin/yandex\-weather\-cli ~/bin/
+.
+.fi
+.
+.IP "" 0
+.
+.P
+Or use snap (Ubuntu or any Linux distribution with snap)
+.
+.IP "" 4
+.
+.nf
+
+# install stable version:
+sudo snap install yandex\-weather\-cli
+
+# install the latest version:
+sudo snap install \-\-edge yandex\-weather\-cli
+
+# update
+sudo snap refresh yandex\-weather\-cli
 .
 .fi
 .

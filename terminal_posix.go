@@ -8,6 +8,6 @@ import (
 	"os"
 )
 
-func getColorWriter(_ bool) io.Writer {
-	return (io.Writer)(os.Stdout)
+func getColorWriter(_ bool) terminalWriter {
+	return terminalWriter{writer: (io.Writer)(os.Stdout)}
 }

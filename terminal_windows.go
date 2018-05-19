@@ -8,9 +8,9 @@ import (
 	"github.com/mattn/go-colorable"
 )
 
-func getColorWriter(noColor bool) io.Writer {
+func getColorWriter(noColor bool) terminalWriter {
 	if noColor {
-		return (io.Writer)(os.Stdout)
+		return terminalWriter{writer: (io.Writer)(os.Stdout)}
 	}
-	return colorable.NewColorableStdout()
+	return terminalWriter{writer: colorable.NewColorableStdout()}
 }

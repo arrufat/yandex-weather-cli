@@ -8,7 +8,7 @@ build:
 	go build
 
 run:
-	go run yandex-weather.go terminal_posix.go util.go
+	go run yandex-weather.go terminal.go terminal_posix.go util.go
 
 update-from-github:
 	go get -u github.com/msoap/$(APP_NAME)

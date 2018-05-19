@@ -267,30 +267,30 @@ func render(forecastNow map[string]interface{}, forecastByHours []HourTemp, fore
 
 		} else {
 
-			fmt.Fprintf(outWriter, cfg.ansiColourString("%s (<yellow>%s</>)\n"), cityFromPage, cfg.baseURL+cfg.city)
-			fmt.Fprintf(outWriter,
+			outWriter.Printf(cfg.ansiColourString("%s (<yellow>%s</>)\n"), cityFromPage, cfg.baseURL+cfg.city)
+			outWriter.Printf(
 				cfg.ansiColourString("Сейчас: <green>%d °C</>, <green>%s</>\n"),
 				forecastNow["term_now"],
 				forecastNow["desc_now"],
 			)
 
 			if _, ok := forecastNow["term_another_value1"]; ok {
-				fmt.Fprint(outWriter, "  ")
+				outWriter.Print("  ")
 				for _, num := range []string{"1", "2", "3", "4"} {
 					if value, ok := forecastNow["term_another_value"+num].(int); ok {
-						fmt.Fprintf(outWriter,
+						outWriter.Printf(
 							cfg.ansiColourString("%s: <green>%d °C</> "),
 							forecastNow["term_another_name"+num],
 							value,
 						)
 					}
 				}
-				fmt.Fprint(outWriter, "\n")
+				outWriter.Println("")
 			}
 
-			fmt.Fprintf(outWriter, cfg.ansiColourString("Давление: <green>%s</>\n"), forecastNow["pressure"])
-			fmt.Fprintf(outWriter, cfg.ansiColourString("Влажность: <green>%s</>\n"), forecastNow["humidity"])
-			fmt.Fprintf(outWriter, cfg.ansiColourString("Ветер: <green>%s</>\n"), forecastNow["wind"])
+			outWriter.Printf(cfg.ansiColourString("Давление: <green>%s</>\n"), forecastNow["pressure"])
+			outWriter.Printf(cfg.ansiColourString("Влажность: <green>%s</>\n"), forecastNow["humidity"])
+			outWriter.Printf(cfg.ansiColourString("Ветер: <green>%s</>\n"), forecastNow["wind"])
 
 			if !cfg.noToday && len(forecastByHours) > 0 {
 				textByHour := [4]string{}
@@ -305,8 +305,8 @@ func render(forecastNow map[string]interface{}, forecastByHours []HourTemp, fore
 				}
 				textByHour[1] = cfg.ansiColourString("<grey+h>" + renderHisto(forecastByHours) + "</>")
 
-				fmt.Fprintf(outWriter, strings.Repeat("─", len(forecastByHours)*4)+"\n")
-				fmt.Fprintf(outWriter, "%s\n%s\n%s\n%s\n",
+				outWriter.Println(strings.Repeat("─", len(forecastByHours)*4))
+				outWriter.Printf("%s\n%s\n%s\n%s\n",
 					cfg.ansiColourString("<grey+h>"+textByHour[0]+"</>"),
 					textByHour[1],
 					textByHour[2],
@@ -321,20 +321,20 @@ func render(forecastNow map[string]interface{}, forecastByHours []HourTemp, fore
 					descLength = TodayForecastTableWidth
 				}
 
-				fmt.Fprintf(outWriter, "%s\n", strings.Repeat("─", 27+descLength))
-				fmt.Fprintf(outWriter,
+				outWriter.Println(strings.Repeat("─", 27+descLength))
+				outWriter.Printf(
 					cfg.ansiColourString("<blue+h> %-10s %4s %-*s %8s</>\n"),
 					"дата",
 					"°C",
 					descLength, "погода",
 					"°C ночью",
 				)
-				fmt.Fprintf(outWriter, "%s\n", strings.Repeat("─", 27+descLength))
+				outWriter.Println(strings.Repeat("─", 27+descLength))
 
 				weekendRe := regexp.MustCompile(`(сб|вс)`)
 				for _, row := range forecastNext {
 					date := weekendRe.ReplaceAllString(row["date"].(string), cfg.ansiColourString("<red+h>$1</>"))
-					fmt.Fprintf(outWriter,
+					outWriter.Printf(
 						" %10s %3d° %-*s %7d°\n",
 						date,
 						row["term"].(int),
@@ -347,7 +347,7 @@ func render(forecastNow map[string]interface{}, forecastByHours []HourTemp, fore
 		}
 
 	} else {
-		fmt.Printf("City \"%s\" not found\n", cfg.city)
+		fmt.Printf("City %q not found\n", cfg.city)
 	}
 }
 

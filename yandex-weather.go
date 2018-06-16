@@ -26,6 +26,7 @@ import (
 	"regexp"
 	"runtime"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/msoap/html2data"
@@ -152,81 +153,94 @@ func getParams() (cfg Config) {
 //-----------------------------------------------------------------------------
 // parse html via goquery, find DOM-nodes with weather forecast data
 func getWeather(cfg Config) (map[string]interface{}, []HourTemp, []map[string]interface{}) {
-	doc := html2data.FromURL(cfg.baseURL+cfg.city, html2data.URLCfg{UA: UserAgent})
-
-	// now block
 	forecastNow := map[string]interface{}{}
-	data, err := doc.GetDataFirst(Selectors)
-	if err != nil {
-		log.Fatal(err)
-	}
+	forecastNext := []map[string]interface{}{}
+	forecastByHours := []HourTemp{}
 
-	reRemoveDesc := regexp.MustCompile(`^.+\s*:\s*`)
-	for name := range Selectors {
-		forecastNow[name] = clearNonprintInString(data[name])
-		switch name {
-		case "humidity", "pressure", "wind":
-			forecastNow[name] = reRemoveDesc.ReplaceAllString(forecastNow[name].(string), "")
-		case "term_now", "term_another_value1", "term_another_value2", "term_another_value3", "term_another_value4":
-			if value, ok := forecastNow[name]; ok {
-				forecastNow[name] = convertStrToInt(value.(string))
-			}
+	var wg sync.WaitGroup
+	wg.Add(2)
+
+	go func() {
+		doc := html2data.FromURL(cfg.baseURL+cfg.city, html2data.URLCfg{UA: UserAgent})
+
+		// now block
+		data, err := doc.GetDataFirst(Selectors)
+		if err != nil {
+			log.Fatal(err)
 		}
-		if name == "wind" && forecastNow[name] == nil {
-			forecastNow[name] = "0 м/с"
-		}
-	}
 
-	// forecast for next days block
-	forecastNext := make([]map[string]interface{}, 0, ForecastDays)
-	dataNextDays, err := doc.GetData(SelectorsNextDays)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	if dateColumn, ok := dataNextDays["date"]; ok {
-		for i, dateStr := range dateColumn {
-			if dateStr == "" {
-				continue
-			}
-
-			forecastNext = append(forecastNext, map[string]interface{}{})
-
-			for name := range SelectorsNextDays {
-				text := ""
-				if _, ok := dataNextDays[name]; ok && len(dataNextDays[name]) >= i+1 {
-					text = dataNextDays[name][i]
-				}
-				forecastNext[i][name] = clearNonprintInString(text)
-
-				if value, ok := forecastNext[i][name].(string); ok && name == "desc" {
-					forecastNext[i][name] = strings.ToLower(value)
+		reRemoveDesc := regexp.MustCompile(`^.+\s*:\s*`)
+		for name := range Selectors {
+			forecastNow[name] = clearNonprintInString(data[name])
+			switch name {
+			case "humidity", "pressure", "wind":
+				forecastNow[name] = reRemoveDesc.ReplaceAllString(forecastNow[name].(string), "")
+			case "term_now", "term_another_value1", "term_another_value2", "term_another_value3", "term_another_value4":
+				if value, ok := forecastNow[name]; ok {
+					forecastNow[name] = convertStrToInt(value.(string))
 				}
 			}
-		}
-	}
-
-	// suggest dates
-	for i := range forecastNext {
-		forecastNext[i]["date"], forecastNext[i]["json_date"] = suggestDate(time.Now(), forecastNext[i]["date"].(string), i)
-		forecastNext[i]["term"] = convertStrToInt(forecastNext[i]["term"].(string))
-		forecastNext[i]["term_night"] = convertStrToInt(forecastNext[i]["term_night"].(string))
-	}
-
-	// forecast by hours block
-	var forecastByHours []HourTemp
-	if !cfg.noToday {
-		docMini := html2data.FromURL(cfg.baseURLMini+cfg.city, html2data.URLCfg{UA: UserAgent})
-		dataHours, err := docMini.GetDataNestedFirst(SelectorByHoursRoot, SelectorByHours)
-		if err == nil {
-			for _, row := range dataHours {
-				hour := convertStrToInt(row["hour"])
-				temp := convertStrToInt(row["temp"])
-				forecastByHours = append(forecastByHours, HourTemp{Hour: hour, Temp: temp, Icon: parseIcon(row["icon"])})
+			if name == "wind" && forecastNow[name] == nil {
+				forecastNow[name] = "0 м/с"
 			}
 		}
-	}
 
+		// forecast for next days block
+		dataNextDays, err := doc.GetData(SelectorsNextDays)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		if dateColumn, ok := dataNextDays["date"]; ok {
+			for i, dateStr := range dateColumn {
+				if dateStr == "" {
+					continue
+				}
+
+				forecastNext = append(forecastNext, map[string]interface{}{})
+
+				for name := range SelectorsNextDays {
+					text := ""
+					if _, ok := dataNextDays[name]; ok && len(dataNextDays[name]) >= i+1 {
+						text = dataNextDays[name][i]
+					}
+					forecastNext[i][name] = clearNonprintInString(text)
+
+					if value, ok := forecastNext[i][name].(string); ok && name == "desc" {
+						forecastNext[i][name] = strings.ToLower(value)
+					}
+				}
+			}
+		}
+
+		// suggest dates
+		for i := range forecastNext {
+			forecastNext[i]["date"], forecastNext[i]["json_date"] = suggestDate(time.Now(), forecastNext[i]["date"].(string), i)
+			forecastNext[i]["term"] = convertStrToInt(forecastNext[i]["term"].(string))
+			forecastNext[i]["term_night"] = convertStrToInt(forecastNext[i]["term_night"].(string))
+		}
+
+		wg.Done()
+	}()
+
+	go func() {
+		// forecast by hours block
+		if !cfg.noToday {
+			docMini := html2data.FromURL(cfg.baseURLMini+cfg.city, html2data.URLCfg{UA: UserAgent})
+			dataHours, err := docMini.GetDataNestedFirst(SelectorByHoursRoot, SelectorByHours)
+			if err == nil {
+				for _, row := range dataHours {
+					hour := convertStrToInt(row["hour"])
+					temp := convertStrToInt(row["temp"])
+					forecastByHours = append(forecastByHours, HourTemp{Hour: hour, Temp: temp, Icon: parseIcon(row["icon"])})
+				}
+			}
+		}
+
+		wg.Done()
+	}()
+
+	wg.Wait()
 	return forecastNow, forecastByHours, forecastNext
 }
 

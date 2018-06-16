@@ -60,8 +60,6 @@ const (
 	BaseURLMiniDefault = "https://p.ya.ru/"
 	// UserAgent - for http.request
 	UserAgent = "yandex-weather-cli/1.10"
-	// ForecastDays - parse days in forecast
-	ForecastDays = 10
 	// TodayForecastTableWidth - today forecast table width for align tables
 	TodayForecastTableWidth = 14*4 - 27
 )

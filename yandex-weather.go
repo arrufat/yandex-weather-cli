@@ -84,10 +84,10 @@ var Selectors = map[string]string{
 
 // SelectorsNextDays - css selectors for forecast next days
 var SelectorsNextDays = map[string]string{
-	"date":       "div.forecast-briefly__days time.time",
-	"desc":       "div.forecast-briefly__days div.forecast-briefly__condition",
-	"term":       "div.forecast-briefly__days div.forecast-briefly__temp_day span.temp__value",
-	"term_night": "div.forecast-briefly__days div.forecast-briefly__temp_night span.temp__value",
+	"date":       "div.forecast-briefly-old__day time.time",
+	"desc":       "div.forecast-briefly-old__day div.forecast-briefly-old__condition",
+	"term":       "div.forecast-briefly-old__day div.forecast-briefly-old__temp_day span.temp__value",
+	"term_night": "div.forecast-briefly-old__day div.forecast-briefly-old__temp_night span.temp__value",
 }
 
 // SelectorByHoursRoot - Root element for forecast data

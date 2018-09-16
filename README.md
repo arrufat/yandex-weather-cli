@@ -45,6 +45,7 @@ Usage
         -json     : JSON out
         -no-color : no coloring
         -no-today : skip today forecast
+        -version  : get version
         -help
 
     # in another city

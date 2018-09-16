@@ -58,6 +58,8 @@ const (
 	BaseURLDefault = "https://yandex.ru/pogoda/"
 	// BaseURLMiniDefault - url for forecast by hours (testing: "http://localhost:8080/get?url=https://p.ya.ru/")
 	BaseURLMiniDefault = "https://p.ya.ru/"
+	// VERSION - version
+	VERSION = "1.11"
 	// UserAgent - for http.request
 	UserAgent = "yandex-weather-cli/1.11"
 	// TodayForecastTableWidth - today forecast table width for align tables
@@ -117,7 +119,13 @@ func getParams() (cfg Config) {
 		flag.PrintDefaults()
 		fmt.Printf("\nexamples:\n  %s kyiv\n  %s -json london\n", os.Args[0], os.Args[0])
 	}
+	version := flag.Bool("version", false, "get version")
 	flag.Parse()
+
+	if *version {
+		fmt.Println(VERSION)
+		os.Exit(0)
+	}
 
 	cfg.city = ""
 	if flag.NArg() >= 1 {

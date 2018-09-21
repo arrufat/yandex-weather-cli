@@ -68,7 +68,7 @@ const (
 
 // Selectors - css selectors for forecast today
 var Selectors = map[string]string{
-	"city":                "div.location h1.title",
+	"city":                "title",
 	"term_now":            "div.fact div.fact__temp",
 	"term_another_name1":  "div.content__brief a.link:nth-child(1) div.day-parts-next__name",
 	"term_another_value1": "div.content__brief a.link:nth-child(1) div.day-parts-next__value",
@@ -176,9 +176,12 @@ func getWeather(cfg Config) (map[string]interface{}, []HourTemp, []map[string]in
 		}
 
 		reRemoveDesc := regexp.MustCompile(`^.+\s*:\s*`)
+		reRemoveMultiline := regexp.MustCompile(`\n.+$`)
 		for name := range Selectors {
 			forecastNow[name] = clearNonprintInString(data[name])
 			switch name {
+			case "city":
+				forecastNow[name] = reRemoveMultiline.ReplaceAllString(forecastNow[name].(string), "")
 			case "humidity", "pressure", "wind":
 				forecastNow[name] = reRemoveDesc.ReplaceAllString(forecastNow[name].(string), "")
 			case "term_now", "term_another_value1", "term_another_value2", "term_another_value3", "term_another_value4":

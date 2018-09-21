@@ -59,9 +59,9 @@ const (
 	// BaseURLMiniDefault - url for forecast by hours (testing: "http://localhost:8080/get?url=https://p.ya.ru/")
 	BaseURLMiniDefault = "https://p.ya.ru/"
 	// VERSION - version
-	VERSION = "1.11"
+	VERSION = "1.12"
 	// UserAgent - for http.request
-	UserAgent = "yandex-weather-cli/1.11"
+	UserAgent = "yandex-weather-cli/1.12"
 	// TodayForecastTableWidth - today forecast table width for align tables
 	TodayForecastTableWidth = 14*4 - 27
 )

@@ -35,6 +35,8 @@ Or use snap (Ubuntu or any Linux distribution with snap)
     # update
     sudo snap refresh yandex-weather-cli
 
+[![Get it from the Snap Store](https://snapcraft.io/static/images/badges/en/snap-store-white.svg)](https://snapcraft.io/yandex-weather-cli)
+
 Usage
 -----
 

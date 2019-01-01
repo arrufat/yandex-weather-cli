@@ -68,20 +68,12 @@ const (
 
 // Selectors - css selectors for forecast today
 var Selectors = map[string]string{
-	"city":                "title",
-	"term_now":            "div.fact div.fact__temp",
-	"term_another_name1":  "div.content__brief a.link:nth-child(1) div.day-parts-next__name",
-	"term_another_value1": "div.content__brief a.link:nth-child(1) div.day-parts-next__value",
-	"term_another_name2":  "div.content__brief a.link:nth-child(2) div.day-parts-next__name",
-	"term_another_value2": "div.content__brief a.link:nth-child(2) div.day-parts-next__value",
-	"term_another_name3":  "div.content__brief a.link:nth-child(3) div.day-parts-next__name",
-	"term_another_value3": "div.content__brief a.link:nth-child(3) div.day-parts-next__value",
-	"term_another_name4":  "div.content__brief a.link:nth-child(4) div.day-parts-next__name",
-	"term_another_value4": "div.content__brief a.link:nth-child(4) div.day-parts-next__value",
-	"desc_now":            "div.fact div.fact__condition",
-	"wind":                "div.fact div.fact__props dl.fact__wind-speed dd.term__value",
-	"humidity":            "div.fact div.fact__props dl.fact__humidity dd.term__value",
-	"pressure":            "div.fact div.fact__props dl.fact__pressure dd.term__value",
+	"city":     "title",
+	"term_now": "div.fact div.fact__temp",
+	"desc_now": "div.fact div.link__condition",
+	"wind":     "div.fact div.fact__props dl.fact__wind-speed dd.term__value",
+	"humidity": "div.fact div.fact__props dl.fact__humidity dd.term__value",
+	"pressure": "div.fact div.fact__props dl.fact__pressure dd.term__value",
 }
 
 // SelectorsNextDays - css selectors for forecast next days
@@ -292,24 +284,10 @@ func render(forecastNow map[string]interface{}, forecastByHours []HourTemp, fore
 
 			outWriter.Printf(cfg.ansiColourString("%s (<yellow>%s</>)\n"), cityFromPage, cfg.baseURL+cfg.city)
 			outWriter.Printf(
-				cfg.ansiColourString("Сейчас: <green>%d °C</>, <green>%s</>\n"),
+				cfg.ansiColourString("Сейчас: <green>%d °C</> - <green>%s</>\n"),
 				forecastNow["term_now"],
 				forecastNow["desc_now"],
 			)
-
-			if _, ok := forecastNow["term_another_value1"]; ok {
-				outWriter.Print("  ")
-				for _, num := range []string{"1", "2", "3", "4"} {
-					if value, ok := forecastNow["term_another_value"+num].(int); ok {
-						outWriter.Printf(
-							cfg.ansiColourString("%s: <green>%d °C</> "),
-							forecastNow["term_another_name"+num],
-							value,
-						)
-					}
-				}
-				outWriter.Println("")
-			}
 
 			outWriter.Printf(cfg.ansiColourString("Давление: <green>%s</>\n"), forecastNow["pressure"])
 			outWriter.Printf(cfg.ansiColourString("Влажность: <green>%s</>\n"), forecastNow["humidity"])

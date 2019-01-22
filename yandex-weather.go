@@ -59,9 +59,9 @@ const (
 	// BaseURLMiniDefault - url for forecast by hours (testing: "http://localhost:8080/get?url=https://p.ya.ru/")
 	BaseURLMiniDefault = "https://p.ya.ru/"
 	// VERSION - version
-	VERSION = "1.12"
+	VERSION = "1.13"
 	// UserAgent - for http.request
-	UserAgent = "yandex-weather-cli/1.12"
+	UserAgent = "yandex-weather-cli/" + VERSION
 	// TodayForecastTableWidth - today forecast table width for align tables
 	TodayForecastTableWidth = 14*4 - 27
 )
@@ -78,10 +78,10 @@ var Selectors = map[string]string{
 
 // SelectorsNextDays - css selectors for forecast next days
 var SelectorsNextDays = map[string]string{
-	"date":       "div.forecast-briefly-old__day time.time",
-	"desc":       "div.forecast-briefly-old__day div.forecast-briefly-old__condition",
-	"term":       "div.forecast-briefly-old__day div.forecast-briefly-old__temp_day span.temp__value",
-	"term_night": "div.forecast-briefly-old__day div.forecast-briefly-old__temp_night span.temp__value",
+	"date":       "div.forecast-briefly__days time.time",
+	"desc":       "div.forecast-briefly__days div.forecast-briefly__condition",
+	"term":       "div.forecast-briefly__days div.forecast-briefly__temp_day span.temp__value",
+	"term_night": "div.forecast-briefly__days div.forecast-briefly__temp_night span.temp__value",
 }
 
 // SelectorByHoursRoot - Root element for forecast data

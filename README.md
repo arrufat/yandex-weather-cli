@@ -24,7 +24,7 @@ Or build from source:
     go get -u github.com/msoap/yandex-weather-cli
     ln -s $GOPATH/bin/yandex-weather-cli ~/bin/
 
-Or use snap (Ubuntu or any Linux distribution with snap)
+Or use snap (Ubuntu or any Linux distribution with snap):
 
     # install stable version:
     sudo snap install yandex-weather-cli
@@ -34,6 +34,8 @@ Or use snap (Ubuntu or any Linux distribution with snap)
     
     # update
     sudo snap refresh yandex-weather-cli
+
+[![Get it from the Snap Store](https://snapcraft.io/static/images/badges/en/snap-store-white.svg)](https://snapcraft.io/yandex-weather-cli)
 
 Usage
 -----

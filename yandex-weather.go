@@ -40,6 +40,7 @@ type Config struct {
 	getJSON     bool
 	noColor     bool
 	noToday     bool
+	daysLimit   int
 }
 
 // HourTemp - one hour temperature
@@ -106,6 +107,7 @@ func getParams() (cfg Config) {
 	flag.BoolVar(&cfg.getJSON, "json", false, "get JSON")
 	flag.BoolVar(&cfg.noColor, "no-color", false, "disable colored output")
 	flag.BoolVar(&cfg.noToday, "no-today", false, "disable today forecast")
+	flag.IntVar(&cfg.daysLimit, "days", 10, "maximum days to show")
 	flag.Usage = func() {
 		fmt.Printf("Usage: %s [options] [city]\noptions:\n", os.Args[0])
 		flag.PrintDefaults()
@@ -193,7 +195,12 @@ func getWeather(cfg Config) (map[string]interface{}, []HourTemp, []map[string]in
 		}
 
 		if dateColumn, ok := dataNextDays["date"]; ok {
+		daysLoop:
 			for i, dateStr := range dateColumn {
+				if len(forecastNext) >= cfg.daysLimit {
+					break daysLoop
+				}
+
 				if dateStr == "" {
 					continue
 				}

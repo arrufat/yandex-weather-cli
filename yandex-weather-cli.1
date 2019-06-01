@@ -1,7 +1,7 @@
 .\" generated with Ronn/v0.7.3
 .\" http://github.com/rtomayko/ronn/tree/0.7.3
 .
-.TH "YANDEX\-WEATHER\-CLI" "" "February 2019" "" ""
+.TH "YANDEX\-WEATHER\-CLI" "" "June 2019" "" ""
 .
 .SH "Install"
 MacOS via homebrew:
@@ -63,12 +63,17 @@ sudo snap refresh yandex\-weather\-cli
 # weather client by default use your current location
 yandex\-weather\-cli [options] [city]
 
-# options
-    \-json     : JSON out
-    \-no\-color : no coloring
-    \-no\-today : skip today forecast
-    \-version  : get version
-    \-help
+# options:
+\-days int
+        maximum days to show (default 10)
+\-json
+        get JSON
+\-no\-color
+        disable colored output
+\-no\-today
+        disable today forecast
+\-version
+        get version
 
 # in another city
 yandex\-weather\-cli kyiv

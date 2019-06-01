@@ -43,12 +43,17 @@ Usage
     # weather client by default use your current location
     yandex-weather-cli [options] [city]
 
-    # options
-        -json     : JSON out
-        -no-color : no coloring
-        -no-today : skip today forecast
-        -version  : get version
-        -help
+    # options:
+    -days int
+            maximum days to show (default 10)
+    -json
+            get JSON
+    -no-color
+            disable colored output
+    -no-today
+            disable today forecast
+    -version
+            get version
 
     # in another city
     yandex-weather-cli kyiv

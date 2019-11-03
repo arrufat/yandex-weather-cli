@@ -91,34 +91,3 @@ func Test_parseIcon(t *testing.T) {
 		}
 	}
 }
-
-func Test_getMaxLengthInSlice(t *testing.T) {
-	testData := []struct {
-		list []map[string]interface{}
-		key  string
-		out  int
-	}{
-		{
-			[]map[string]interface{}{
-				{"k1": "aaa"},
-				{"k1": "aaaa"},
-			},
-			"k1",
-			4,
-		}, {
-			[]map[string]interface{}{
-				{"k1": "снег", "k2": "снегопад"},
-				{"k1": "дождь"},
-			},
-			"k1",
-			5,
-		},
-	}
-
-	for _, item := range testData {
-		out := getMaxLengthInSlice(item.list, item.key)
-		if out != item.out {
-			t.Errorf("expected: %#v, real: %#v", item.out, out)
-		}
-	}
-}

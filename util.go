@@ -12,32 +12,21 @@ import (
 // HistoChars - chars for draw histogram
 var HistoChars = [...]string{"▁", "▂", "▃", "▄", "▅", "▆", "▇", "█"}
 
+var weekdaysRu = [...]string{
+	"вс",
+	"пн",
+	"вт",
+	"ср",
+	"чт",
+	"пт",
+	"сб",
+}
+
 //-----------------------------------------------------------------------------
-// suggest date from one day, returns human date and json date
-func suggestDate(now time.Time, date string, orderNum int) (formatDate string, JSONDate string) {
-	day, err := strconv.Atoi(clearIntegerInString(date))
-	if err != nil {
-		return date, date
-	}
-
-	from := now.AddDate(0, 0, orderNum-1)
-
-	for i := 0; day != from.Day() && i < 4; i++ {
-		from = from.AddDate(0, 0, 1)
-	}
-
-	weekdaysRu := [...]string{
-		"вс",
-		"пн",
-		"вт",
-		"ср",
-		"чт",
-		"пт",
-		"сб",
-	}
-
-	return from.Format("02.01") + " (" + weekdaysRu[from.Weekday()] + ")",
-		from.Format("2006-01-02")
+// formatDates gets date in json and human format
+func formatDates(date time.Time) (formatDate string, JSONDate string) {
+	return date.Format("02.01") + " (" + weekdaysRu[date.Weekday()] + ")",
+		date.Format("2006-01-02")
 }
 
 //-----------------------------------------------------------------------------
@@ -51,11 +40,10 @@ func convertStrToInt(str string) int {
 }
 
 //-----------------------------------------------------------------------------
-// get max length of string in slice of map of string
-func getMaxLengthInSlice(list []map[string]interface{}, key string) int {
+func getMaxLengthDesc(list []DayForecast) int {
 	maxLengh := 0
 	for _, row := range list {
-		length := len([]rune(row[key].(string)))
+		length := len([]rune(row.Desc))
 		if maxLengh < length {
 			maxLengh = length
 		}

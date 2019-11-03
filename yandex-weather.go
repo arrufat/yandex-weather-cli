@@ -50,6 +50,15 @@ type HourTemp struct {
 	Icon string `json:"icon"`
 }
 
+// DayForecast - one day forecast
+type DayForecast struct {
+	DateHuman string `json:"-"`
+	Date      string `json:"date"`
+	Desc      string `json:"desc"`
+	Temp      int    `json:"temp"`
+	TempNight int    `json:"temp_night"`
+}
+
 const (
 	// EnvBaseURLName - environment variable for setup base URL
 	EnvBaseURLName = "Y_WEATHER_URL"
@@ -60,7 +69,7 @@ const (
 	// BaseURLMiniDefault - url for forecast by hours (testing: "http://localhost:8080/get?url=https://p.ya.ru/")
 	BaseURLMiniDefault = "https://p.ya.ru/"
 	// VERSION - version
-	VERSION = "1.13"
+	VERSION = "1.14"
 	// UserAgent - for http.request
 	UserAgent = "yandex-weather-cli/" + VERSION
 	// TodayForecastTableWidth - today forecast table width for align tables
@@ -79,10 +88,10 @@ var Selectors = map[string]string{
 
 // SelectorsNextDays - css selectors for forecast next days
 var SelectorsNextDays = map[string]string{
-	"date":       "div.forecast-briefly__days time.time",
+	"date":       "div.forecast-briefly__days time.time:attr(datetime)",
 	"desc":       "div.forecast-briefly__days div.forecast-briefly__condition",
-	"term":       "div.forecast-briefly__days div.forecast-briefly__temp_day span.temp__value",
-	"term_night": "div.forecast-briefly__days div.forecast-briefly__temp_night span.temp__value",
+	"temp":       "div.forecast-briefly__days div.forecast-briefly__temp_day span.temp__value",
+	"temp_night": "div.forecast-briefly__days div.forecast-briefly__temp_night span.temp__value",
 }
 
 // SelectorByHoursRoot - Root element for forecast data
@@ -152,9 +161,9 @@ func getParams() (cfg Config) {
 
 //-----------------------------------------------------------------------------
 // parse html via goquery, find DOM-nodes with weather forecast data
-func getWeather(cfg Config) (map[string]interface{}, []HourTemp, []map[string]interface{}) {
+func getWeather(cfg Config) (map[string]interface{}, []HourTemp, []DayForecast) {
 	forecastNow := map[string]interface{}{}
-	forecastNext := []map[string]interface{}{}
+	forecastNext := []DayForecast{}
 	forecastByHours := []HourTemp{}
 
 	var wg sync.WaitGroup
@@ -171,6 +180,8 @@ func getWeather(cfg Config) (map[string]interface{}, []HourTemp, []map[string]in
 
 		reRemoveDesc := regexp.MustCompile(`^.+\s*:\s*`)
 		reRemoveMultiline := regexp.MustCompile(`\n.+$`)
+		reDate := regexp.MustCompile(`^\d{4}-\d{2}-\d{2}`)
+
 		for name := range Selectors {
 			forecastNow[name] = clearNonprintInString(data[name])
 			switch name {
@@ -195,6 +206,7 @@ func getWeather(cfg Config) (map[string]interface{}, []HourTemp, []map[string]in
 		}
 
 		if dateColumn, ok := dataNextDays["date"]; ok {
+			now := time.Now()
 		daysLoop:
 			for i, dateStr := range dateColumn {
 				if len(forecastNext) >= cfg.daysLimit {
@@ -205,27 +217,39 @@ func getWeather(cfg Config) (map[string]interface{}, []HourTemp, []map[string]in
 					continue
 				}
 
-				forecastNext = append(forecastNext, map[string]interface{}{})
-
+				currentDay := DayForecast{}
 				for name := range SelectorsNextDays {
 					text := ""
 					if _, ok := dataNextDays[name]; ok && len(dataNextDays[name]) >= i+1 {
 						text = dataNextDays[name][i]
+					} else {
+						continue
 					}
-					forecastNext[i][name] = clearNonprintInString(text)
+					text = clearNonprintInString(text)
 
-					if value, ok := forecastNext[i][name].(string); ok && name == "desc" {
-						forecastNext[i][name] = strings.ToLower(value)
+					switch name {
+					case "date":
+						datesRaw := reDate.FindAllString(text, 1)
+						if len(datesRaw) == 1 {
+							curDate, err := time.Parse("2006-01-02", datesRaw[0])
+							if err != nil || !curDate.Truncate(time.Hour*24).After(now.Truncate(time.Hour*24)) {
+								continue daysLoop
+							}
+							currentDay.DateHuman, currentDay.Date = formatDates(curDate)
+						}
+					case "desc":
+						currentDay.Desc = strings.ToLower(text)
+					case "temp":
+						currentDay.Temp = convertStrToInt(text)
+					case "temp_night":
+						currentDay.TempNight = convertStrToInt(text)
 					}
 				}
-			}
-		}
 
-		// suggest dates
-		for i := range forecastNext {
-			forecastNext[i]["date"], forecastNext[i]["json_date"] = suggestDate(time.Now(), forecastNext[i]["date"].(string), i)
-			forecastNext[i]["term"] = convertStrToInt(forecastNext[i]["term"].(string))
-			forecastNext[i]["term_night"] = convertStrToInt(forecastNext[i]["term_night"].(string))
+				if currentDay.Date != "" {
+					forecastNext = append(forecastNext, currentDay)
+				}
+			}
 		}
 
 		wg.Done()
@@ -266,7 +290,7 @@ func parseIcon(cssClass string) string {
 
 //-----------------------------------------------------------------------------
 // render data as text or JSON
-func render(forecastNow map[string]interface{}, forecastByHours []HourTemp, forecastNext []map[string]interface{}, cfg Config) {
+func render(forecastNow map[string]interface{}, forecastByHours []HourTemp, forecastNext []DayForecast, cfg Config) {
 	if cityFromPage, ok := forecastNow["city"]; ok && cityFromPage != "" {
 		outWriter := getColorWriter(cfg.noColor)
 
@@ -277,10 +301,6 @@ func render(forecastNow map[string]interface{}, forecastByHours []HourTemp, fore
 			}
 
 			if len(forecastNext) > 0 {
-				for _, row := range forecastNext {
-					row["date"] = row["json_date"]
-					delete(row, "json_date")
-				}
 				forecastNow["next_days"] = forecastNext
 			}
 
@@ -323,7 +343,7 @@ func render(forecastNow map[string]interface{}, forecastByHours []HourTemp, fore
 			}
 
 			if len(forecastNext) > 0 {
-				descLength := getMaxLengthInSlice(forecastNext, "desc")
+				descLength := getMaxLengthDesc(forecastNext)
 				if descLength < TodayForecastTableWidth {
 					// align with today forecast
 					descLength = TodayForecastTableWidth
@@ -341,14 +361,14 @@ func render(forecastNow map[string]interface{}, forecastByHours []HourTemp, fore
 
 				weekendRe := regexp.MustCompile(`(сб|вс)`)
 				for _, row := range forecastNext {
-					date := weekendRe.ReplaceAllString(row["date"].(string), cfg.ansiColourString("<red+h>$1</>"))
+					date := weekendRe.ReplaceAllString(row.DateHuman, cfg.ansiColourString("<red+h>$1</>"))
 					outWriter.Printf(
 						" %10s %3d° %-*s %7d°\n",
 						date,
-						row["term"].(int),
+						row.Temp,
 						descLength,
-						row["desc"],
-						row["term_night"].(int),
+						row.Desc,
+						row.TempNight,
 					)
 				}
 			}

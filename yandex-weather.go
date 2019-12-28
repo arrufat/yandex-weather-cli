@@ -81,9 +81,9 @@ var Selectors = map[string]string{
 	"city":     "title",
 	"term_now": "div.fact div.fact__temp",
 	"desc_now": "div.fact div.link__condition",
-	"wind":     "div.fact div.fact__props dl.fact__wind-speed dd.term__value",
-	"humidity": "div.fact div.fact__props dl.fact__humidity dd.term__value",
-	"pressure": "div.fact div.fact__props dl.fact__pressure dd.term__value",
+	"wind":     "div.fact div.fact__props div.fact__wind-speed",
+	"humidity": "div.fact div.fact__props div.fact__humidity",
+	"pressure": "div.fact div.fact__props div.fact__pressure",
 }
 
 // SelectorsNextDays - css selectors for forecast next days

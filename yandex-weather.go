@@ -21,7 +21,6 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"log"
 	"os"
 	"regexp"
 	"runtime"
@@ -111,6 +110,13 @@ var ICONS = map[string]string{
 }
 
 //-----------------------------------------------------------------------------
+// check if program's output used in *nix pipe
+func outputIsPiped() bool {
+	stdoutStat, err := os.Stdout.Stat()
+	return err != nil || (stdoutStat.Mode()&os.ModeCharDevice) == 0
+}
+
+//-----------------------------------------------------------------------------
 // get command line parameters
 func getParams() (cfg Config) {
 	flag.BoolVar(&cfg.getJSON, "json", false, "get JSON")
@@ -138,11 +144,8 @@ func getParams() (cfg Config) {
 	if runtime.GOOS == "windows" {
 		// broken unicode symbols in cmd.exe and don't detect pipe
 		cfg.noToday = true
-	} else {
-		// detect pipe
-		if stdoutStat, err := os.Stdout.Stat(); err != nil || (stdoutStat.Mode()&os.ModeCharDevice) == 0 {
-			cfg.noColor = true
-		}
+	} else if outputIsPiped() {
+		cfg.noColor = true
 	}
 
 	if baseURL := os.Getenv(EnvBaseURLName); len(baseURL) > 0 {
@@ -166,21 +169,16 @@ func getWeather(cfg Config) (map[string]interface{}, []HourTemp, []DayForecast) 
 	forecastNext := []DayForecast{}
 	forecastByHours := []HourTemp{}
 
-	var wg sync.WaitGroup
-	wg.Add(2)
+	reRemoveDesc := regexp.MustCompile(`^.+\s*:\s*`)
+	reRemoveMultiline := regexp.MustCompile(`\n.+$`)
+	reDate := regexp.MustCompile(`^\d{4}-\d{2}-\d{2}`)
 
-	go func() {
-		doc := html2data.FromURL(cfg.baseURL+cfg.city, html2data.URLCfg{UA: UserAgent})
-
-		// now block
+	var extractNowForecast = func(doc html2data.Doc) {
 		data, err := doc.GetDataFirst(Selectors)
 		if err != nil {
-			log.Fatal(err)
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
 		}
-
-		reRemoveDesc := regexp.MustCompile(`^.+\s*:\s*`)
-		reRemoveMultiline := regexp.MustCompile(`\n.+$`)
-		reDate := regexp.MustCompile(`^\d{4}-\d{2}-\d{2}`)
 
 		for name := range Selectors {
 			forecastNow[name] = clearNonprintInString(data[name])
@@ -198,11 +196,13 @@ func getWeather(cfg Config) (map[string]interface{}, []HourTemp, []DayForecast) 
 				forecastNow[name] = "0 м/с"
 			}
 		}
-
-		// forecast for next days block
+	}
+	
+	var extractNextForecast = func(doc html2data.Doc) {
 		dataNextDays, err := doc.GetData(SelectorsNextDays)
 		if err != nil {
-			log.Fatal(err)
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
 		}
 
 		if dateColumn, ok := dataNextDays["date"]; ok {
@@ -251,7 +251,15 @@ func getWeather(cfg Config) (map[string]interface{}, []HourTemp, []DayForecast) 
 				}
 			}
 		}
+	}
 
+	var wg sync.WaitGroup
+	wg.Add(2)
+
+	go func() {
+		doc := html2data.FromURL(cfg.baseURL+cfg.city, html2data.URLCfg{UA: UserAgent})
+		extractNowForecast(doc)
+		extractNextForecast(doc)
 		wg.Done()
 	}()
 
@@ -291,91 +299,89 @@ func parseIcon(cssClass string) string {
 //-----------------------------------------------------------------------------
 // render data as text or JSON
 func render(forecastNow map[string]interface{}, forecastByHours []HourTemp, forecastNext []DayForecast, cfg Config) {
-	if cityFromPage, ok := forecastNow["city"]; ok && cityFromPage != "" {
-		outWriter := getColorWriter(cfg.noColor)
+	cityFromPage, ok := forecastNow["city"]
+	if !ok || cityFromPage == "" {
+		fmt.Fprintf(os.Stderr, "City %q not found\n", cfg.city)
+		os.Exit(1)
+	}
+	outWriter := getColorWriter(cfg.noColor)
 
-		if cfg.getJSON {
-
-			if !cfg.noToday && len(forecastByHours) > 0 {
-				forecastNow["by_hours"] = forecastByHours
-			}
-
-			if len(forecastNext) > 0 {
-				forecastNow["next_days"] = forecastNext
-			}
-
-			jsonBytes, _ := json.Marshal(forecastNow)
-			fmt.Println(string(jsonBytes))
-
-		} else {
-
-			outWriter.Printf(cfg.ansiColourString("%s (<yellow>%s</>)\n"), cityFromPage, cfg.baseURL+cfg.city)
-			outWriter.Printf(
-				cfg.ansiColourString("Сейчас: <green>%d °C</> - <green>%s</>\n"),
-				forecastNow["term_now"],
-				forecastNow["desc_now"],
-			)
-
-			outWriter.Printf(cfg.ansiColourString("Давление: <green>%s</>\n"), forecastNow["pressure"])
-			outWriter.Printf(cfg.ansiColourString("Влажность: <green>%s</>\n"), forecastNow["humidity"])
-			outWriter.Printf(cfg.ansiColourString("Ветер: <green>%s</>\n"), forecastNow["wind"])
-
-			if !cfg.noToday && len(forecastByHours) > 0 {
-				textByHour := [4]string{}
-				for _, item := range forecastByHours {
-					textByHour[0] += fmt.Sprintf("%3d ", item.Hour)
-					textByHour[2] += fmt.Sprintf("%3d°", item.Temp)
-					icon, exists := ICONS[item.Icon]
-					if !exists {
-						icon = " "
-					}
-					textByHour[3] += fmt.Sprintf(cfg.ansiColourString("<blue>%3s</blue> "), icon)
-				}
-				textByHour[1] = cfg.ansiColourString("<grey+h>" + renderHisto(forecastByHours) + "</>")
-
-				outWriter.Println(strings.Repeat("─", len(forecastByHours)*4))
-				outWriter.Printf("%s\n%s\n%s\n%s\n",
-					cfg.ansiColourString("<grey+h>"+textByHour[0]+"</>"),
-					textByHour[1],
-					textByHour[2],
-					textByHour[3],
-				)
-			}
-
-			if len(forecastNext) > 0 {
-				descLength := getMaxLengthDesc(forecastNext)
-				if descLength < TodayForecastTableWidth {
-					// align with today forecast
-					descLength = TodayForecastTableWidth
-				}
-
-				outWriter.Println(strings.Repeat("─", 27+descLength))
-				outWriter.Printf(
-					cfg.ansiColourString("<blue+h> %-10s %4s %-*s %8s</>\n"),
-					"дата",
-					"°C",
-					descLength, "погода",
-					"°C ночью",
-				)
-				outWriter.Println(strings.Repeat("─", 27+descLength))
-
-				weekendRe := regexp.MustCompile(`(сб|вс)`)
-				for _, row := range forecastNext {
-					date := weekendRe.ReplaceAllString(row.DateHuman, cfg.ansiColourString("<red+h>$1</>"))
-					outWriter.Printf(
-						" %10s %3d° %-*s %7d°\n",
-						date,
-						row.Temp,
-						descLength,
-						row.Desc,
-						row.TempNight,
-					)
-				}
-			}
+	if cfg.getJSON {
+		if !cfg.noToday && len(forecastByHours) > 0 {
+			forecastNow["by_hours"] = forecastByHours
 		}
 
-	} else {
-		fmt.Printf("City %q not found\n", cfg.city)
+		if len(forecastNext) > 0 {
+			forecastNow["next_days"] = forecastNext
+		}
+
+		jsonBytes, _ := json.Marshal(forecastNow)
+		fmt.Println(string(jsonBytes))
+		return
+	}
+
+	outWriter.Printf(cfg.ansiColourString("%s (<yellow>%s</>)\n"), cityFromPage, cfg.baseURL+cfg.city)
+	outWriter.Printf(
+		cfg.ansiColourString("Сейчас: <green>%d °C</> - <green>%s</>\n"),
+		forecastNow["term_now"],
+		forecastNow["desc_now"],
+	)
+
+	outWriter.Printf(cfg.ansiColourString("Давление: <green>%s</>\n"), forecastNow["pressure"])
+	outWriter.Printf(cfg.ansiColourString("Влажность: <green>%s</>\n"), forecastNow["humidity"])
+	outWriter.Printf(cfg.ansiColourString("Ветер: <green>%s</>\n"), forecastNow["wind"])
+
+	if !cfg.noToday && len(forecastByHours) > 0 {
+		textByHour := [4]string{}
+		for _, item := range forecastByHours {
+			textByHour[0] += fmt.Sprintf("%3d ", item.Hour)
+			textByHour[2] += fmt.Sprintf("%3d°", item.Temp)
+			icon, exists := ICONS[item.Icon]
+			if !exists {
+				icon = " "
+			}
+			textByHour[3] += fmt.Sprintf(cfg.ansiColourString("<blue>%3s</blue> "), icon)
+		}
+		textByHour[1] = cfg.ansiColourString("<grey+h>" + renderHisto(forecastByHours) + "</>")
+
+		outWriter.Println(strings.Repeat("─", len(forecastByHours)*4))
+		outWriter.Printf("%s\n%s\n%s\n%s\n",
+			cfg.ansiColourString("<grey+h>"+textByHour[0]+"</>"),
+			textByHour[1],
+			textByHour[2],
+			textByHour[3],
+		)
+	}
+
+	if len(forecastNext) > 0 {
+		descLength := getMaxLengthDesc(forecastNext)
+		if descLength < TodayForecastTableWidth {
+			// align with today forecast
+			descLength = TodayForecastTableWidth
+		}
+
+		outWriter.Println(strings.Repeat("─", 27+descLength))
+		outWriter.Printf(
+			cfg.ansiColourString("<blue+h> %-10s %4s %-*s %8s</>\n"),
+			"дата",
+			"°C",
+			descLength, "погода",
+			"°C ночью",
+		)
+		outWriter.Println(strings.Repeat("─", 27+descLength))
+
+		weekendRe := regexp.MustCompile(`(сб|вс)`)
+		for _, row := range forecastNext {
+			date := weekendRe.ReplaceAllString(row.DateHuman, cfg.ansiColourString("<red+h>$1</>"))
+			outWriter.Printf(
+				" %10s %3d° %-*s %7d°\n",
+				date,
+				row.Temp,
+				descLength,
+				row.Desc,
+				row.TempNight,
+			)
+		}
 	}
 }
 

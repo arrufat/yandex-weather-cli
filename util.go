@@ -24,7 +24,7 @@ var weekdaysRu = [...]string{
 
 //-----------------------------------------------------------------------------
 // formatDates gets date in json and human format
-func formatDates(date time.Time) (formatDate string, JSONDate string) {
+func formatDates(date time.Time) (formatDate string, jsonDate string) {
 	return date.Format("02.01") + " (" + weekdaysRu[date.Weekday()] + ")",
 		date.Format("2006-01-02")
 }
@@ -102,7 +102,6 @@ func renderHisto(forecastByHours []HourTemp) string {
 	interpolationFact := 4
 	temperatures := make([]float64, len(forecastByHours)*interpolationFact)
 	for i, row := range forecastByHours {
-
 		currTemp := float64(row.Temp)
 		nextI := i + 1
 		if i == len(forecastByHours)-1 {
@@ -137,7 +136,7 @@ func renderHisto(forecastByHours []HourTemp) string {
 	}
 	for _, temp := range temperatures {
 		reduceValue := int((temp - minTemp) / (maxTemp - minTemp) * maxGradation)
-		result = result + HistoChars[reduceValue]
+		result += HistoChars[reduceValue]
 	}
 
 	return result

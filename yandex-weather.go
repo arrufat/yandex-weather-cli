@@ -197,7 +197,7 @@ func getWeather(cfg Config) (map[string]interface{}, []HourTemp, []DayForecast) 
 			}
 		}
 	}
-	
+
 	var extractNextForecast = func(doc html2data.Doc) {
 		dataNextDays, err := doc.GetData(SelectorsNextDays)
 		if err != nil {

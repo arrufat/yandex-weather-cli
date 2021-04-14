@@ -1,21 +1,18 @@
 name: yandex-weather-cli
-version: '1.14'
+version: git
 summary: Yandex weather cli
 description: Command line interface for Yandex weather service
 grade: stable
 confinement: strict
 base: core18
-
 parts:
   yandex-weather-cli:
-    after: [go]
-    source: .
     plugin: go
     go-importpath: github.com/msoap/yandex-weather-cli
-  go:
-    source-tag: go1.10
+    source: .
+    source-type: git
 
 apps:
   yandex-weather-cli:
-    command: yandex-weather-cli
+    command: bin/yandex-weather-cli
     plugs: [network]

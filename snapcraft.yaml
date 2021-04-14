@@ -4,6 +4,7 @@ summary: Yandex weather cli
 description: Command line interface for Yandex weather service
 grade: stable
 confinement: strict
+base: core20
 
 parts:
   yandex-weather-cli:

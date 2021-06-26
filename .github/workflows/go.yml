@@ -24,7 +24,7 @@ jobs:
         go-version: ${{ matrix.go }}
 
     - name: Install errcheck
-      run: go install github.com/kisielk/errcheck@latest
+      run: go get github.com/kisielk/errcheck
 
     - name: errcheck
       run: errcheck -verbose ./...

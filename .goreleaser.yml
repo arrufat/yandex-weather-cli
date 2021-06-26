@@ -28,12 +28,12 @@ nfpms:
       - rpm
     bindir: /usr/bin
     contents:
-      - src: {{ .ProjectName }}.1
-        dst: /usr/share/man/man1/{{ .ProjectName }}.1
+      - src: yandex-weather-cli.1
+        dst: /usr/share/man/man1/yandex-weather-cli.1
 
 brews:
   -
-    name: {{ .ProjectName }}
+    name: yandex-weather-cli
     homepage: https://github.com/msoap/{{ .ProjectName }}
     description: Command line interface for Yandex weather service.
     license: MIT

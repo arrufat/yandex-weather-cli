@@ -16,11 +16,11 @@ builds:
     flags:
       - -trimpath
     ldflags:
-      - "-s -w"
+      - -s -w -X "main.version={{ .Version }}"
 
 nfpms:
   - 
-    homepage: https://github.com/msoap/yandex-weather-cli
+    homepage: https://github.com/msoap/{{ .ProjectName }}
     description: Command line interface for Yandex weather service.
     license: MIT
     formats:
@@ -28,19 +28,19 @@ nfpms:
       - rpm
     bindir: /usr/bin
     contents:
-      - src: yandex-weather-cli.1
-        dst: /usr/share/man/man1/yandex-weather-cli.1
+      - src: {{ .ProjectName }}.1
+        dst: /usr/share/man/man1/{{ .ProjectName }}.1
 
 brews:
   -
-    name: yandex-weather-cli
-    homepage: https://github.com/msoap/yandex-weather-cli
+    name: {{ .ProjectName }}
+    homepage: https://github.com/msoap/{{ .ProjectName }}
     description: Command line interface for Yandex weather service.
     license: MIT
     skip_upload: true
     install: |
-      bin.install "yandex-weather-cli"
-      man1.install "yandex-weather-cli.1"
+      bin.install "{{ .ProjectName }}"
+      man1.install "{{ .ProjectName }}.1"
 
 archives:
   -
@@ -58,9 +58,17 @@ checksum:
 snapshot:
   name_template: "{{ .Tag }}"
 
+release:
+  name_template: "{{.Version}} - {{.Date}}"
+  header: |
+    [![Github Releases (by Release)](https://img.shields.io/github/downloads/msoap/{{ .ProjectName }}/{{ .Tag }}/total.svg)]()
+    [![Github All Releases](https://img.shields.io/github/downloads/msoap/{{ .ProjectName }}/total.svg)](https://github.com/msoap/{{ .ProjectName }}/releases/latest)
+
 changelog:
-  sort: asc
+  sort: desc
   filters:
     exclude:
       - '^docs:'
       - '^test:'
+      - '^Merge branch'
+      - '^go fmt'

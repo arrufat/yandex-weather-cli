@@ -33,6 +33,7 @@ nfpms:
 
 brews:
   -
+    name: yandex-weather-cli
     homepage: https://github.com/msoap/yandex-weather-cli
     description: Command line interface for Yandex weather service.
     license: MIT

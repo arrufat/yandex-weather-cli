@@ -1,0 +1,65 @@
+builds:
+  - env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - 386
+      - amd64
+      - arm
+      - arm64
+    ignore:
+      - goos: windows
+        goarch: arm
+    flags:
+      - -trimpath
+    ldflags:
+      - "-s -w"
+
+nfpms:
+  - 
+    homepage: https://github.com/msoap/yandex-weather-cli
+    description: Command line interface for Yandex weather service.
+    license: MIT
+    formats:
+      - deb
+      - rpm
+    bindir: /usr/bin
+    contents:
+      - src: yandex-weather-cli.1
+        dst: /usr/share/man/man1/yandex-weather-cli.1
+
+brews:
+  -
+    homepage: https://github.com/msoap/yandex-weather-cli
+    description: Command line interface for Yandex weather service.
+    license: MIT
+    skip_upload: true
+    install: |
+      bin.install "yandex-weather-cli"
+      man1.install "yandex-weather-cli.1"
+
+archives:
+  -
+    format_overrides:
+      - goos: windows
+        format: zip
+    files:
+      - README*
+      - LICENSE*
+      - "*.1"
+
+checksum:
+  name_template: 'checksums.txt'
+
+snapshot:
+  name_template: "{{ .Tag }}"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'

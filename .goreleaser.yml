@@ -1,3 +1,9 @@
+release:
+  name_template: "{{ .Version }} - {{ .Date }}"
+  draft: true
+  header: |
+    [![Github Releases (by Release)](https://img.shields.io/github/downloads/msoap/yandex-weather-cli/{{ .Tag }}/total.svg)]() [![Github All Releases](https://img.shields.io/github/downloads/msoap/yandex-weather-cli/total.svg)](https://github.com/msoap/yandex-weather-cli/releases/latest)
+
 builds:
   - env:
       - CGO_ENABLED=0
@@ -46,11 +52,6 @@ checksum:
 
 snapshot:
   name_template: "{{ .Tag }}"
-
-release:
-  name_template: "{{.Version}} - {{.Date}}"
-  header: |
-    [![Github Releases (by Release)](https://img.shields.io/github/downloads/msoap/yandex-weather-cli/{{ .Tag }}/total.svg)]() [![Github All Releases](https://img.shields.io/github/downloads/msoap/yandex-weather-cli/total.svg)](https://github.com/msoap/yandex-weather-cli/releases/latest)
 
 changelog:
   sort: desc

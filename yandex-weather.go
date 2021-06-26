@@ -72,8 +72,6 @@ const (
 	BaseURLDefault = "https://yandex.ru/pogoda/"
 	// BaseURLMiniDefault - url for forecast by hours (testing: "http://localhost:8080/get?url=https://p.ya.ru/")
 	BaseURLMiniDefault = "https://p.ya.ru/"
-	// version - version
-	// UserAgent - for http.request
 	// TodayForecastTableWidth - today forecast table width for align tables
 	TodayForecastTableWidth = 14*4 - 27
 )

@@ -58,6 +58,11 @@ type DayForecast struct {
 	TempNight int    `json:"temp_night"`
 }
 
+var (
+	version   = "1.15"
+	userAgent = "yandex-weather-cli/" + version
+)
+
 const (
 	// EnvBaseURLName - environment variable for setup base URL
 	EnvBaseURLName = "Y_WEATHER_URL"
@@ -67,10 +72,8 @@ const (
 	BaseURLDefault = "https://yandex.ru/pogoda/"
 	// BaseURLMiniDefault - url for forecast by hours (testing: "http://localhost:8080/get?url=https://p.ya.ru/")
 	BaseURLMiniDefault = "https://p.ya.ru/"
-	// VERSION - version
-	VERSION = "1.14"
+	// version - version
 	// UserAgent - for http.request
-	UserAgent = "yandex-weather-cli/" + VERSION
 	// TodayForecastTableWidth - today forecast table width for align tables
 	TodayForecastTableWidth = 14*4 - 27
 )
@@ -128,11 +131,11 @@ func getParams() (cfg Config) {
 		flag.PrintDefaults()
 		fmt.Printf("\nexamples:\n  %s kyiv\n  %s -json london\n", os.Args[0], os.Args[0])
 	}
-	version := flag.Bool("version", false, "get version")
+	getVersion := flag.Bool("version", false, "get version")
 	flag.Parse()
 
-	if *version {
-		fmt.Println(VERSION)
+	if *getVersion {
+		fmt.Println(version)
 		os.Exit(0)
 	}
 
@@ -257,7 +260,7 @@ func getWeather(cfg Config) (map[string]interface{}, []HourTemp, []DayForecast) 
 	wg.Add(2)
 
 	go func() {
-		doc := html2data.FromURL(cfg.baseURL+cfg.city, html2data.URLCfg{UA: UserAgent})
+		doc := html2data.FromURL(cfg.baseURL+cfg.city, html2data.URLCfg{UA: userAgent})
 		extractNowForecast(doc)
 		extractNextForecast(doc)
 		wg.Done()
@@ -266,7 +269,7 @@ func getWeather(cfg Config) (map[string]interface{}, []HourTemp, []DayForecast) 
 	go func() {
 		// forecast by hours block
 		if !cfg.noToday {
-			docMini := html2data.FromURL(cfg.baseURLMini+cfg.city, html2data.URLCfg{UA: UserAgent})
+			docMini := html2data.FromURL(cfg.baseURLMini+cfg.city, html2data.URLCfg{UA: userAgent})
 			dataHours, err := docMini.GetDataNestedFirst(SelectorByHoursRoot, SelectorByHours)
 			if err == nil {
 				for _, row := range dataHours {

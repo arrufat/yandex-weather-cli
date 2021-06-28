@@ -1,6 +1,5 @@
 release:
   name_template: "{{ .Version }} - {{ .Date }}"
-  draft: true
   header: |
     [![Github Releases (by Release)](https://img.shields.io/github/downloads/msoap/yandex-weather-cli/{{ .Tag }}/total.svg)]() [![Github All Releases](https://img.shields.io/github/downloads/msoap/yandex-weather-cli/total.svg)](https://github.com/msoap/yandex-weather-cli/releases/latest)
 

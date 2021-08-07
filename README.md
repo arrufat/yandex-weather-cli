@@ -21,7 +21,7 @@ Or download binaries from: [releases](https://github.com/msoap/yandex-weather-cl
 
 Or build from source:
 
-    go get -u github.com/msoap/yandex-weather-cli
+    go install github.com/msoap/yandex-weather-cli@latest
     ln -s $GOPATH/bin/yandex-weather-cli ~/bin/
 
 Or use snap (Ubuntu or any Linux distribution with snap):
@@ -79,6 +79,3 @@ See also
   * [pogoda.yandex.ru](https://pogoda.yandex.ru/)
   * [github.com/schachmat/wego](https://github.com/schachmat/wego) - another weather command line client (Go)
   * [github.com/jfrazelle/weather](https://github.com/jfrazelle/weather) - another weather command line client (Go)
-  * [github.com/sramsay/wu](https://github.com/sramsay/wu) - another weather command line client (Go)
-  * [github.com/brianriley/weather-cli](https://github.com/brianriley/weather-cli) - another weather command line client (Python)
-  * [github.com/JackWink/Weather](https://github.com/JackWink/Weather) - another weather command line client (Python)

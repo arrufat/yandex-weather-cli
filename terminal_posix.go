@@ -1,3 +1,4 @@
+//go:build !windows
 // +build !windows
 
 // getColorWriter() for POSIX os-es

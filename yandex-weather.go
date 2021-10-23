@@ -31,8 +31,8 @@ import (
 	"github.com/msoap/html2data"
 )
 
-// Config - application config
-type Config struct {
+// config - application config
+type config struct {
 	baseURL     string
 	baseURLMini string
 	city        string
@@ -42,15 +42,15 @@ type Config struct {
 	daysLimit   int
 }
 
-// HourTemp - one hour temperature
-type HourTemp struct {
+// hourTemp - one hour temperature
+type hourTemp struct {
 	Hour int    `json:"hour"`
 	Temp int    `json:"temp"`
 	Icon string `json:"icon"`
 }
 
-// DayForecast - one day forecast
-type DayForecast struct {
+// dayForecast - one day forecast
+type dayForecast struct {
 	DateHuman string `json:"-"`
 	Date      string `json:"date"`
 	Desc      string `json:"desc"`
@@ -64,20 +64,20 @@ var (
 )
 
 const (
-	// EnvBaseURLName - environment variable for setup base URL
-	EnvBaseURLName = "Y_WEATHER_URL"
-	// EnvBaseURLMiniName - environment variable for setup base URL (for days forecast)
-	EnvBaseURLMiniName = "Y_WEATHER_MINI_URL"
-	// BaseURLDefault - yandex pogoda service url (testing: "http://localhost:8080/get?url=https://yandex.ru/pogoda/")
-	BaseURLDefault = "https://yandex.ru/pogoda/"
-	// BaseURLMiniDefault - url for forecast by hours (testing: "http://localhost:8080/get?url=https://p.ya.ru/")
-	BaseURLMiniDefault = "https://p.ya.ru/"
-	// TodayForecastTableWidth - today forecast table width for align tables
-	TodayForecastTableWidth = 14*4 - 27
+	// envBaseURLName - environment variable for setup base URL
+	envBaseURLName = "Y_WEATHER_URL"
+	// envBaseURLMiniName - environment variable for setup base URL (for days forecast)
+	envBaseURLMiniName = "Y_WEATHER_MINI_URL"
+	// baseURLDefault - yandex pogoda service url (testing: "http://localhost:8080/get?url=https://yandex.ru/pogoda/")
+	baseURLDefault = "https://yandex.ru/pogoda/"
+	// baseURLMiniDefault - url for forecast by hours (testing: "http://localhost:8080/get?url=https://p.ya.ru/")
+	baseURLMiniDefault = "https://p.ya.ru/"
+	// todayForecastTableWidth - today forecast table width for align tables
+	todayForecastTableWidth = 14*4 - 27
 )
 
-// Selectors - css selectors for forecast today
-var Selectors = map[string]string{
+// selectors - css selectors for forecast today
+var selectors = map[string]string{
 	"city":     "title",
 	"term_now": "div.fact div.fact__temp",
 	"desc_now": "div.fact div.link__condition",
@@ -86,26 +86,26 @@ var Selectors = map[string]string{
 	"pressure": "div.fact div.fact__props div.fact__pressure",
 }
 
-// SelectorsNextDays - css selectors for forecast next days
-var SelectorsNextDays = map[string]string{
+// selectorsNextDays - css selectors for forecast next days
+var selectorsNextDays = map[string]string{
 	"date":       "div.forecast-briefly__days time.time:attr(datetime)",
 	"desc":       "div.forecast-briefly__days div.forecast-briefly__condition",
 	"temp":       "div.forecast-briefly__days div.forecast-briefly__temp_day span.temp__value",
 	"temp_night": "div.forecast-briefly__days div.forecast-briefly__temp_night span.temp__value",
 }
 
-// SelectorByHoursRoot - Root element for forecast data
-var SelectorByHoursRoot = "div.temp-chart__wrap"
+// selectorByHoursRoot - Root element for forecast data
+var selectorByHoursRoot = "div.temp-chart__wrap"
 
-// SelectorByHours - get forecast by hours
-var SelectorByHours = map[string]string{
+// selectorByHours - get forecast by hours
+var selectorByHours = map[string]string{
 	"hour": "p.temp-chart__hour",
 	"temp": "div.temp-chart__temp",
 	"icon": "i.icon:attr(class)",
 }
 
-// ICONS - unicode symbols for icon names
-var ICONS = map[string]string{
+// icons - unicode symbols for icon names
+var icons = map[string]string{
 	"icon_snow": "✻",
 	"icon_rain": "☂",
 }
@@ -119,7 +119,7 @@ func outputIsPiped() bool {
 
 //-----------------------------------------------------------------------------
 // get command line parameters
-func getParams() (cfg Config) {
+func getParams() (cfg config) {
 	flag.BoolVar(&cfg.getJSON, "json", false, "get JSON")
 	flag.BoolVar(&cfg.noColor, "no-color", false, "disable colored output")
 	flag.BoolVar(&cfg.noToday, "no-today", false, "disable today forecast")
@@ -149,15 +149,15 @@ func getParams() (cfg Config) {
 		cfg.noColor = true
 	}
 
-	if baseURL := os.Getenv(EnvBaseURLName); len(baseURL) > 0 {
+	if baseURL := os.Getenv(envBaseURLName); len(baseURL) > 0 {
 		cfg.baseURL = baseURL
 	} else {
-		cfg.baseURL = BaseURLDefault
+		cfg.baseURL = baseURLDefault
 	}
-	if baseURLMini := os.Getenv(EnvBaseURLMiniName); len(baseURLMini) > 0 {
+	if baseURLMini := os.Getenv(envBaseURLMiniName); len(baseURLMini) > 0 {
 		cfg.baseURLMini = baseURLMini
 	} else {
-		cfg.baseURLMini = BaseURLMiniDefault
+		cfg.baseURLMini = baseURLMiniDefault
 	}
 
 	return cfg
@@ -165,23 +165,23 @@ func getParams() (cfg Config) {
 
 //-----------------------------------------------------------------------------
 // parse html via goquery, find DOM-nodes with weather forecast data
-func getWeather(cfg Config) (map[string]interface{}, []HourTemp, []DayForecast) {
+func getWeather(cfg config) (map[string]interface{}, []hourTemp, []dayForecast) {
 	forecastNow := map[string]interface{}{}
-	forecastNext := []DayForecast{}
-	forecastByHours := []HourTemp{}
+	forecastNext := []dayForecast{}
+	forecastByHours := []hourTemp{}
 
 	reRemoveDesc := regexp.MustCompile(`^.+\s*:\s*`)
 	reRemoveMultiline := regexp.MustCompile(`\n.+$`)
 	reDate := regexp.MustCompile(`^\d{4}-\d{2}-\d{2}`)
 
 	var extractNowForecast = func(doc html2data.Doc) {
-		data, err := doc.GetDataFirst(Selectors)
+		data, err := doc.GetDataFirst(selectors)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
 
-		for name := range Selectors {
+		for name := range selectors {
 			forecastNow[name] = clearNonprintInString(data[name])
 			switch name {
 			case "city":
@@ -200,7 +200,7 @@ func getWeather(cfg Config) (map[string]interface{}, []HourTemp, []DayForecast) 
 	}
 
 	var extractNextForecast = func(doc html2data.Doc) {
-		dataNextDays, err := doc.GetData(SelectorsNextDays)
+		dataNextDays, err := doc.GetData(selectorsNextDays)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
@@ -218,8 +218,8 @@ func getWeather(cfg Config) (map[string]interface{}, []HourTemp, []DayForecast) 
 					continue
 				}
 
-				currentDay := DayForecast{}
-				for name := range SelectorsNextDays {
+				currentDay := dayForecast{}
+				for name := range selectorsNextDays {
 					text := ""
 					if _, ok := dataNextDays[name]; ok && len(dataNextDays[name]) >= i+1 {
 						text = dataNextDays[name][i]
@@ -268,12 +268,12 @@ func getWeather(cfg Config) (map[string]interface{}, []HourTemp, []DayForecast) 
 		// forecast by hours block
 		if !cfg.noToday {
 			docMini := html2data.FromURL(cfg.baseURLMini+cfg.city, html2data.URLCfg{UA: userAgent})
-			dataHours, err := docMini.GetDataNestedFirst(SelectorByHoursRoot, SelectorByHours)
+			dataHours, err := docMini.GetDataNestedFirst(selectorByHoursRoot, selectorByHours)
 			if err == nil {
 				for _, row := range dataHours {
 					hour := convertStrToInt(row["hour"])
 					temp := convertStrToInt(row["temp"])
-					forecastByHours = append(forecastByHours, HourTemp{Hour: hour, Temp: temp, Icon: parseIcon(row["icon"])})
+					forecastByHours = append(forecastByHours, hourTemp{Hour: hour, Temp: temp, Icon: parseIcon(row["icon"])})
 				}
 			}
 		}
@@ -290,7 +290,7 @@ func getWeather(cfg Config) (map[string]interface{}, []HourTemp, []DayForecast) 
 func parseIcon(cssClass string) string {
 	allAttributes := regexp.MustCompile(`\s+`).Split(cssClass, -1)
 	for _, attr := range allAttributes {
-		if _, ok := ICONS[attr]; ok {
+		if _, ok := icons[attr]; ok {
 			return attr
 		}
 	}
@@ -299,7 +299,7 @@ func parseIcon(cssClass string) string {
 
 //-----------------------------------------------------------------------------
 // render data as text or JSON
-func render(forecastNow map[string]interface{}, forecastByHours []HourTemp, forecastNext []DayForecast, cfg Config) {
+func render(forecastNow map[string]interface{}, forecastByHours []hourTemp, forecastNext []dayForecast, cfg config) {
 	cityFromPage, ok := forecastNow["city"]
 	if !ok || cityFromPage == "" {
 		fmt.Fprintf(os.Stderr, "City %q not found\n", cfg.city)
@@ -337,7 +337,7 @@ func render(forecastNow map[string]interface{}, forecastByHours []HourTemp, fore
 		for _, item := range forecastByHours {
 			textByHour[0] += fmt.Sprintf("%3d ", item.Hour)
 			textByHour[2] += fmt.Sprintf("%3d°", item.Temp)
-			icon, exists := ICONS[item.Icon]
+			icon, exists := icons[item.Icon]
 			if !exists {
 				icon = " "
 			}
@@ -356,9 +356,9 @@ func render(forecastNow map[string]interface{}, forecastByHours []HourTemp, fore
 
 	if len(forecastNext) > 0 {
 		descLength := getMaxLengthDesc(forecastNext)
-		if descLength < TodayForecastTableWidth {
+		if descLength < todayForecastTableWidth {
 			// align with today forecast
-			descLength = TodayForecastTableWidth
+			descLength = todayForecastTableWidth
 		}
 
 		outWriter.Println(strings.Repeat("─", 27+descLength))

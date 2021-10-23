@@ -40,7 +40,7 @@ func convertStrToInt(str string) int {
 }
 
 //-----------------------------------------------------------------------------
-func getMaxLengthDesc(list []DayForecast) int {
+func getMaxLengthDesc(list []dayForecast) int {
 	maxLengh := 0
 	for _, row := range list {
 		length := len([]rune(row.Desc))
@@ -75,7 +75,7 @@ func clearNonprintInString(in string) (out string) {
 
 //-----------------------------------------------------------------------------
 // convert "<red>123</> str <green>456</green>" to ansi color string
-func (cfg Config) ansiColourString(str string) string {
+func (cfg config) ansiColourString(str string) string {
 	oneColor := `(black|red|green|yellow|blue|magenta|cyan|white|grey|\d{1,3})(\+[bBuih]+)?`
 	re := regexp.MustCompile(`<(` + oneColor + `(:` + oneColor + `)?|/\w*)>`)
 	result := re.ReplaceAllStringFunc(str, func(in string) (out string) {
@@ -97,7 +97,7 @@ func (cfg Config) ansiColourString(str string) string {
 
 // ----------------------------------------------------------------------------
 // Render histogram for forecast by hours
-func renderHisto(forecastByHours []HourTemp) string {
+func renderHisto(forecastByHours []hourTemp) string {
 	// linear interpolation (* 4)
 	interpolationFact := 4
 	temperatures := make([]float64, len(forecastByHours)*interpolationFact)

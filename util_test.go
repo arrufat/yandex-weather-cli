@@ -72,7 +72,7 @@ func Test_ansiColourString(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		cfg := Config{
+		cfg := config{
 			city:    tt.city,
 			getJSON: tt.getJSON,
 			noColor: tt.noColor,
@@ -87,12 +87,12 @@ func Test_ansiColourString(t *testing.T) {
 func Test_renderHisto(t *testing.T) {
 	tests := []struct {
 		name            string
-		forecastByHours []HourTemp
+		forecastByHours []hourTemp
 		want            string
 	}{
 		{
 			name: "1",
-			forecastByHours: []HourTemp{
+			forecastByHours: []hourTemp{
 				{
 					Hour: 17,
 					Temp: -3,
@@ -168,7 +168,7 @@ func Test_renderHisto(t *testing.T) {
 		},
 		{
 			name: "all same temperature",
-			forecastByHours: []HourTemp{
+			forecastByHours: []hourTemp{
 				{
 					Hour: 17,
 					Temp: 1,
@@ -189,7 +189,7 @@ func Test_renderHisto(t *testing.T) {
 		},
 		{
 			name: "all same negative temperature",
-			forecastByHours: []HourTemp{
+			forecastByHours: []hourTemp{
 				{
 					Hour: 17,
 					Temp: -10,
